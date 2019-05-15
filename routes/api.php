@@ -13,3 +13,19 @@ use Illuminate\Http\Request;
 |
 */
 
+
+Route::group([
+    'namespace' => 'API','prefix' => 'v1'
+], function () {
+    Route::prefix('auth')->group(function () {
+        
+        // signup route
+        Route::post('signup', 'UserController@signup')
+        ->middleware('validateActivate');
+
+        // signup route
+        Route::post('signup/activate/{token}', 'UserController@signupActivate')
+        ->middleware('validateSignup');
+    
+    });
+});
