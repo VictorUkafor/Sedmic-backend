@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateSignup
+class ValidateLogin
 {
     /**
      * Handle an incoming request.
@@ -17,14 +17,16 @@ class ValidateSignup
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => 'required',
-            'image' => 'image',
+            'username' => 'required',
+            'password' => 'required|min:7|alpha_num',
         ]);
 
         if ($validator->fails()) {
             $errors = $validator->errors();
-            return response()->json($errors, 400);
-        }
+            return response()->json([
+                'errors' => $errors
+            ], 400);
+        } 
 
         return $next($request);
     }

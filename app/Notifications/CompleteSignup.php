@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class AccountActivate extends Notification
+class CompleteSignup extends Notification
 {
     use Queueable;
 
@@ -40,13 +40,13 @@ class AccountActivate extends Notification
      */
     public function toMail($notifiable)
     {
-
         return (new MailMessage)
-            ->subject('Congratulations! Your account is active now - ' . config('app.name'))
+            ->subject('Signup completed - ' . config('app.name'))
             ->greeting('Dear Beloved!')
-            ->line('Your account at Sedmic is active. You can login now to'.
-            'explore all Sedmic has to offer.')
-            ->line('Congratulations once again!');
+            ->line('You have completed all the requirement for signup at Sedmic.'. 
+            'However, your account is not active yet. Please contact your admin for'.
+            'activation.')
+            ->line('Thank you so much for using Sedmic. God bless you!');
     }
 
     /**

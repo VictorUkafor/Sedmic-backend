@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateActivate
+class ValidateConfirm
 {
     /**
      * Handle an incoming request.
@@ -17,11 +17,8 @@ class ValidateActivate
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => 'required',
-            'image' => 'image',
-            'date_of_birth' => 'date',
-            'password' => 'required|min:7|alpha_num|confirmed',
-            'password_confirmation' => 'required|same:password',
+            'username' => "required|unique:users,username,'regex:/^\S*$/u'",
+            'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {

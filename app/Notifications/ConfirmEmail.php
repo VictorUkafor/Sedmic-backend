@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class AccountActivate extends Notification
+class ConfirmEmail extends Notification
 {
     use Queueable;
 
@@ -40,13 +40,16 @@ class AccountActivate extends Notification
      */
     public function toMail($notifiable)
     {
+        $url = url('/api/v1/auth/signup/confirm/'.$notifiable->activation_token);
 
         return (new MailMessage)
-            ->subject('Congratulations! Your account is active now - ' . config('app.name'))
+            ->subject('Please confirm your account - ' . config('app.name'))
             ->greeting('Dear Beloved!')
-            ->line('Your account at Sedmic is active. You can login now to'.
-            'explore all Sedmic has to offer.')
-            ->line('Congratulations once again!');
+            ->line('Thank you for your interest to signup at Sedmic. 
+            Please before you proceed, we would want you to confirm
+            your account.')
+            ->action('Click here to confirm your account', url($url))
+            ->line('Thank you so much for using Sedmic. God bless you!');
     }
 
     /**

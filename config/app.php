@@ -177,8 +177,11 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        // Cloudinary
+        // JD\Cloudder
         JD\Cloudder\CloudderServiceProvider::class,
+
+        // Tymon\JWTAuth
+        Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
 
     ],
 
@@ -231,6 +234,10 @@ return [
 
         // Cloudinary
         'Cloudder' => JD\Cloudder\Facades\Cloudder::class,
+
+        // Tymon\JWTAuth
+        'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
+        'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
 
     ],
 
