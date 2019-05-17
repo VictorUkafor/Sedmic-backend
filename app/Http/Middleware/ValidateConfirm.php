@@ -17,7 +17,7 @@ class ValidateConfirm
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'username' => "required|unique:users,username,'regex:/^\S*$/u'",
+            'username' => ['required', 'min:7', 'unique:users,username', 'regex:/^\S*$/u'],
             'email' => 'required|email',
         ]);
 

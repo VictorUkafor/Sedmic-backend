@@ -50,16 +50,13 @@ Route::group([
                 Route::post('/block/{userId}', 'UserController@blockAdmin');
 
                 // remove admin
-                Route::post('/remove/{userId}', 'UserController@removeAdmin');
-            
-            });
-
+                Route::delete('/remove/{userId}', 'UserController@removeAdmin');
+                });
         });
 
         // login route
         Route::post('login', 'UserController@login')
         ->middleware('validateLogin');
-    
     });
 
 
@@ -67,8 +64,10 @@ Route::group([
         'middleware' => 'jwt.auth', 'prefix' => 'user'
     ], function () {
         
-        // update user
-        Route::post('/update', 'UserController@update');
+        // show user
+        Route::get('/', 'UserController@show');
 
+        // update user
+        Route::put('/update', 'UserController@update');
     });
 });

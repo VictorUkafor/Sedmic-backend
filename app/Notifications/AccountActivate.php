@@ -42,10 +42,10 @@ class AccountActivate extends Notification
     {
 
         return (new MailMessage)
-            ->subject('Congratulations! Your account is active now - ' . config('app.name'))
+            ->subject('Congratulations! Your account is active now')
             ->greeting('Dear Beloved!')
             ->line('Your account at Sedmic is active. You can login now to'.
-            'explore all Sedmic has to offer.')
+            ' explore all Sedmic has to offer.')
             ->line('Congratulations once again!');
     }
 

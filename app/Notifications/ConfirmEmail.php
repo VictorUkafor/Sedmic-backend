@@ -43,7 +43,7 @@ class ConfirmEmail extends Notification
         $url = url('/api/v1/auth/signup/confirm/'.$notifiable->activation_token);
 
         return (new MailMessage)
-            ->subject('Please confirm your account - ' . config('app.name'))
+            ->subject('Please confirm your account')
             ->greeting('Dear Beloved!')
             ->line('Thank you for your interest to signup at Sedmic. 
             Please before you proceed, we would want you to confirm

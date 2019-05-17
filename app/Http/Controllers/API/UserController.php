@@ -174,7 +174,7 @@ public function login(Request $request){
             }
             
             return response()->json([
-                'successMessage' => 'The user would be notified',
+                'successMessage' => 'Action successful',
             ], 201); 
 
         } else {
@@ -220,42 +220,23 @@ public function login(Request $request){
     }
 
 
-    public function update(Request $request)
+    public function show(Request $request)
     {
         $user = auth()->user();
-                
-        // get the RealPath of new user image
-        $image_name = $request->image ? 
-        $request->image->getRealPath() : '';  
 
-        // updates record
-        $user->email = $request->email ?
-        $request->email : $user->email;
+        if($user->account_type === 'diamond'){
+            $myAdmins = User::where('church_username', $user->church_username)
+            ->whereNotIn('id', [$user->id])->get();
 
-        $user->full_name = $request->full_name ?
-        $request->full_name : $user->full_name;
+            $user->admins = $myAdmins;            
+        }
 
-        $user->image = $request->image ?
-        $user->username : '';
-
-        $user->sex = $request->sex?
-        $request->sex : $user->sex;
-
-        $user->date_of_birth = $request->date_of_birth ?
-        $request->date_of_birth : $user->date_of_birth;
         
-
-        // if an image is uploaded, save to cloudinary
-        // and deletes the previous one
-        if(strlen($image_name) !== 0){
-            Cloudder::delete($user->username); 
-            Cloudder::upload($image_name, $user->username); 
-        } 
-        
-        if ($user->save()) {
+        if ($user) {
             return response()->json([
-                'successMessage' => 'Profile updated successfully',
-            ], 201);
+                'successMessage' => 'User Profile',
+                'user' => $user,
+            ], 200);
         } else {
             return response()->json([
                 'errorMessage' => 'Internal server error'
@@ -263,6 +244,52 @@ public function login(Request $request){
         }
 
       }
+
+
+      public function update(Request $request)
+      {
+          $user = auth()->user();
+                  
+          // get the RealPath of new user image
+          $image_name = $request->image ? 
+          $request->image->getRealPath() : '';  
+  
+          // updates record
+          $user->email = $request->email ?
+          $request->email : $user->email;
+  
+          $user->full_name = $request->full_name ?
+          $request->full_name : $user->full_name;
+  
+          $user->image = $request->image ?
+          $user->username : '';
+  
+          $user->sex = $request->sex?
+          $request->sex : $user->sex;
+  
+          $user->date_of_birth = $request->date_of_birth ?
+          $request->date_of_birth : $user->date_of_birth;
+          
+  
+          // if an image is uploaded, save to cloudinary
+          // and deletes the previous one
+          if(strlen($image_name) !== 0){
+              Cloudder::delete($user->username); 
+              Cloudder::upload($image_name, $user->username); 
+          } 
+          
+          if ($user->save()) {
+              return response()->json([
+                  'successMessage' => 'Profile updated successfully',
+                  'user' => $user
+              ], 201);
+          } else {
+              return response()->json([
+                  'errorMessage' => 'Internal server error'
+              ], 500);
+          }
+  
+        }
 
 
 }

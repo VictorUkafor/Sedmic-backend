@@ -41,10 +41,10 @@ class CompleteSignup extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Signup completed - ' . config('app.name'))
+            ->subject('Signup completed')
             ->greeting('Dear Beloved!')
             ->line('You have completed all the requirement for signup at Sedmic.'. 
-            'However, your account is not active yet. Please contact your admin for'.
+            ' However, your account is not active yet. Please contact your admin for '.
             'activation.')
             ->line('Thank you so much for using Sedmic. God bless you!');
     }
