@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->increments('id');
             $table->string('full_name')->nullable();
             $table->string('username', 128)->unique();
-            $table->string('church_username', 128);
+            $table->string('church_username');
             $table->string('email');
             $table->string('password')->nullable();
             $table->string('image')->nullable();
@@ -32,10 +32,6 @@ class CreateUsersTable extends Migration
             $table->softDeletes();
         });
 
-        Schema::table('users', function($table) {
-            $table->foreign('church_username')->references('username')
-            ->on('churches')->onDelete('cascade');
-          });
     }
 
     /**

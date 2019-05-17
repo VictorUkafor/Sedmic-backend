@@ -56,11 +56,13 @@ class Kernel extends HttpKernel
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'validateActivate' => \App\Http\Middleware\validateActivate::class,
-        'validateConfirm' => \App\Http\Middleware\validateConfirm::class,
-        'validateLogin' => \App\Http\Middleware\validateLogin::class,
+        'validateActivate' => \App\Http\Middleware\ValidateActivate::class,
+        'validateConfirm' => \App\Http\Middleware\ValidateConfirm::class,
+        'validateLogin' => \App\Http\Middleware\ValidateLogin::class,
         'findUser' => \App\Http\Middleware\FindUser::class,
         'myAdmins' => \App\Http\Middleware\MyAdmins::class,
+        'validateUsername' => \App\Http\Middleware\ValidateUsername::class,
+        'validatePassword' => \App\Http\Middleware\ValidatePassword::class,
 
         //jwt auth
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,
