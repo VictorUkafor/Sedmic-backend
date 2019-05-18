@@ -36,7 +36,7 @@ Route::group([
         ], function () {
             
             // create admin
-            Route::post('/', 'UserController@createAdmin')
+            Route::post('/create', 'UserController@createAdmin')
             ->middleware('validateConfirm');
                 
             Route::middleware([
@@ -44,19 +44,24 @@ Route::group([
                 ])->group(function () {
                 
                 // active admin
-                Route::post('/activate/{userId}', 'UserController@activateAdmin');
+                Route::post('/activate/{userId}', 'UserController@activateAdmin')
+                ->middleware('signupSuccess');
 
                 // block admin
-                Route::post('/block/{userId}', 'UserController@blockAdmin');
+                Route::post('/block/{userId}', 'UserController@blockAdmin')
+                ->middleware('signupSuccess');
 
                 // remove admin
                 Route::delete('/remove/{userId}', 'UserController@removeAdmin');
-                });
+            
+            });
         });
+
 
         // login route
         Route::post('login', 'UserController@login')
         ->middleware('validateLogin');
+
 
         // // Password resets routes
         Route::prefix('password-reset')->group(function () {
@@ -77,14 +82,50 @@ Route::group([
     });
 
 
-    Route::group([
-        'middleware' => 'jwt.auth', 'prefix' => 'user'
-    ], function () {
+    Route::middleware('jwt.auth')->group(function () {
         
-        // show user
-        Route::get('/', 'UserController@show');
+        // user routes
+        Route::prefix('user')->group(function () {
+            
+            // show user
+            Route::get('/', 'UserController@show');
 
-        // update user
-        Route::put('/update', 'UserController@update');
+            // update user
+            Route::put('/update', 'UserController@update');
+        
+        });
+        
+        
+        // church crude route
+        Route::group([
+            'middleware' => 'checkDiamond', 
+            'prefix' => 'church'
+        ], function () {
+
+            // create church
+            Route::get('/', 'ChurchController@show')
+            ->middleware('churchCreated');
+            
+            // create church
+            Route::post('/create', 'ChurchController@create')
+            ->middleware(['churchNotCreated','validateChurch']);
+            
+            // update church info
+            Route::put('/update', 'ChurchController@update')
+            ->middleware('churchCreated');
+            
+            // upload church image
+            Route::post('/upload-image', 'ChurchController@uploadImage')
+            ->middleware(['validateImage', 'churchCreated']);
+            
+            // delete church image
+            Route::post('/delete-image', 'ChurchController@deleteImage')
+            ->middleware(['churchCreated', 'imageExist']);
+        
+        });
+    
+    
     });
+
+
 });

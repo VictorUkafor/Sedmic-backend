@@ -16,9 +16,9 @@ class ConfirmEmail extends Notification
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user)
     {
-        //
+        $this->user = $user;
     }
 
     /**
@@ -44,10 +44,11 @@ class ConfirmEmail extends Notification
 
         return (new MailMessage)
             ->subject('Please confirm your account')
-            ->greeting('Dear Beloved!')
+            ->greeting('Dear '.$this->user->username.'!')
             ->line('Thank you for your interest to signup at Sedmic. 
             Please before you proceed, we would want you to confirm
             your account.')
+            ->line('Your Username: '.$this->user->username)
             ->action('Click here to confirm your account', url($url))
             ->line('Thank you so much for using Sedmic. God bless you!');
     }

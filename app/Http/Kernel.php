@@ -63,6 +63,15 @@ class Kernel extends HttpKernel
         'myAdmins' => \App\Http\Middleware\MyAdmins::class,
         'validateUsername' => \App\Http\Middleware\ValidateUsername::class,
         'validatePassword' => \App\Http\Middleware\ValidatePassword::class,
+        'validateChurch' => \App\Http\Middleware\ValidateChurchCreate::class,
+        'checkDiamond' => \App\Http\Middleware\CheckDiamond::class,
+        'churchCreated' => \App\Http\Middleware\ChurchCreated::class,
+        'churchNotCreated' => \App\Http\Middleware\ChurchNotCreated::class,
+        'validateImage' => \App\Http\Middleware\ValidateImage::class,
+        'imageExist' => \App\Http\Middleware\ImageExist::class,
+        'signupSuccess' => \App\Http\Middleware\SignupSuccess::class,
+
+
 
         //jwt auth
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,

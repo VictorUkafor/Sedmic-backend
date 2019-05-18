@@ -8,8 +8,10 @@ use JWTAuth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Notifications\ConfirmEmail;
+use App\Notifications\AdminConfirm;
 use App\Notifications\AccountActivate;
 use App\Notifications\CompleteSignup;
+use App\Notifications\AdminSignup;
 use Illuminate\Support\Str;
 use JD\Cloudder\Facades\Cloudder;
 use Illuminate\Support\Facades\Auth;
@@ -81,7 +83,11 @@ class UserController extends Controller
             ], 201);           
         }
 
+        $superUser = User::where('username', $user->church_username)
+        ->first();
+
         $user->notify(new CompleteSignup($user));
+        $superUser->notify(new AdminSignup($user, $superUser));
         return response()->json([
             'successMessage' => 'Signup successful. '. 
             'Please contact your admin for activation',
@@ -147,7 +153,7 @@ public function login(Request $request){
         $user->account_type = 'gold';
         
         if ($user->save()) {
-            $user->notify(new ConfirmEmail($user));
+            $user->notify(new AdminConfirm($user, $superUser));
             return response()->json([
                 'successMessage' => 'A confirmation mail has been sent to this user',
             ], 201); 

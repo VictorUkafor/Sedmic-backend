@@ -16,9 +16,9 @@ class CompleteSignup extends Notification
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user)
     {
-        //
+        $this->user = $user;
     }
 
     /**
@@ -42,7 +42,7 @@ class CompleteSignup extends Notification
     {
         return (new MailMessage)
             ->subject('Signup completed')
-            ->greeting('Dear Beloved!')
+            ->greeting('Dear '.$this->user->full_name.'!')
             ->line('You have completed all the requirement for signup at Sedmic.'. 
             ' However, your account is not active yet. Please contact your admin for '.
             'activation.')

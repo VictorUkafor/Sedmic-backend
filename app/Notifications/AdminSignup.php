@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class AccountActivate extends Notification
+class AdminSignup extends Notification
 {
     use Queueable;
 
@@ -16,9 +16,10 @@ class AccountActivate extends Notification
      *
      * @return void
      */
-    public function __construct($user)
+    public function __construct($user, $admin)
     {
         $this->user = $user;
+        $this->admin = $admin;
     }
 
     /**
@@ -40,13 +41,12 @@ class AccountActivate extends Notification
      */
     public function toMail($notifiable)
     {
-
         return (new MailMessage)
-            ->subject('Congratulations! Your account is active now')
-            ->greeting('Dear '.$this->user->full_name.'!')
-            ->line('Your account at Sedmic is active. You can login now to'.
-            ' explore all Sedmic has to offer.')
-            ->line('Congratulations once again!');
+            ->subject($this->user->username.' signup completed')
+            ->greeting('Dear '.$this->admin->full_name.'!')
+            ->line('This is to notify you that '.$this->user->username.' has completed all requirement for signup.'. 
+            ' However, '.$this->user->username.' account will remain inactive until you activate it from your account')
+            ->line('Thank you so much for using Sedmic. God bless you!');
     }
 
     /**
