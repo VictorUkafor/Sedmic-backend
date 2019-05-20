@@ -18,7 +18,7 @@ class ChurchNotCreated
     public function handle($request, Closure $next)
     {
         $user = auth()->user();
-        $church = Church::where('username', $user->username)
+        $church = Church::where('username', $user->church_username)
         ->first();
         
         if($church){

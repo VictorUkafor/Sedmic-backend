@@ -2,11 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use App\Church;
 use Closure;
 use Validator;
 
-class ChurchCreated
+class CheckChurch
 {
     /**
      * Handle an incoming request.
@@ -18,16 +17,13 @@ class ChurchCreated
     public function handle($request, Closure $next)
     {
         $user = auth()->user();
-        $church = Church::where('username', $user->church_username)
-        ->first();
+        $church = Church::where('username', )
         
-        if(!$church){
+        if($user->church !== 'diamond'){
             return response()->json([
-                'errorMessage' => 'Church does not exist'
+                'errorMessage' => 'Unauthorized'
             ], 404);           
         }
-
-        $request->church = $church;
         
         return $next($request);           
     }

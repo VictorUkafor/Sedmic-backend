@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Church;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class ChurchController extends Controller
@@ -68,9 +69,6 @@ class ChurchController extends Controller
         $church->name_of_church = $request->name_of_church ? 
         $request->name_of_church : $church->name_of_church;
 
-        $church->username = $user->username ? 
-        $user->username : $church->username;
-
         $church->official_email = $request->official_email ?
         $request->official_email : $church->official_email;
 
@@ -100,16 +98,19 @@ class ChurchController extends Controller
     {
         $church = $request->church;
         $images = $church->images;
-        $count = count(explode(" ", $images));
 
-        foreach ($request->images as $key => $image) {
-            $number = $key + $count;
+        // foreach ($request->images => $image) {
+        //    $image_public_id = $church->username.'image'.md5(microtime(true).mt_Rand());
 
-            Cloudder::upload($image->getRealPath(), 
-            'church'.$church->username.$number);
+        //     Cloudder::upload($image->getRealPath(), $image_public_id);
 
-            $images .= 'church'.$church->username.$number.' ';
-        }
+        //     $images .= $image_public_id.' ';
+        // }
+
+        $image_public_id = $church->username.'image'.md5(microtime(true).mt_Rand());
+        // Cloudder::upload($image->getRealPath(), $image_public_id);
+
+        $images .= $image_public_id.' ';
         
         $church->images = $images;
 
@@ -123,6 +124,7 @@ class ChurchController extends Controller
         return response()->json([
             'errorMessage' => 'Internal server error'
         ], 500);
+
     }
 
 
@@ -133,11 +135,11 @@ class ChurchController extends Controller
 
         $images = $church->images;
 
-        $delete = Cloudder::delete($image); 
+        //$delete = Cloudder::delete($image); 
 
-        if($delete){
+        //if($delete){
           $images = str_replace($image, '', $images);  
-        }
+        //}
 
         $church->images = $images;
 

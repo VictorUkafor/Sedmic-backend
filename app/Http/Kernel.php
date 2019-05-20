@@ -65,6 +65,7 @@ class Kernel extends HttpKernel
         'validatePassword' => \App\Http\Middleware\ValidatePassword::class,
         'validateChurch' => \App\Http\Middleware\ValidateChurchCreate::class,
         'checkDiamond' => \App\Http\Middleware\CheckDiamond::class,
+        'checkChurch' => \App\Http\Middleware\CheckChurch::class,
         'churchCreated' => \App\Http\Middleware\ChurchCreated::class,
         'churchNotCreated' => \App\Http\Middleware\ChurchNotCreated::class,
         'validateImage' => \App\Http\Middleware\ValidateImage::class,

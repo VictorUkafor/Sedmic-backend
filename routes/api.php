@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 */
 
 
-Route::group([
-    'namespace' => 'API','prefix' => 'v1'
-], function () {
+Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
     Route::prefix('auth')->group(function () {
 
         Route::prefix('signup')->group(function () {
@@ -97,35 +95,41 @@ Route::group([
         
         
         // church crude route
-        Route::group([
-            'middleware' => 'checkDiamond', 
-            'prefix' => 'church'
-        ], function () {
+        Route::prefix('church')->group(function () {
 
-            // create church
+            // fetch church
             Route::get('/', 'ChurchController@show')
             ->middleware('churchCreated');
+
+            Route::middleware('checkDiamond')->group(function () {
+                
+                // create church
+                Route::post('/create', 'ChurchController@create')
+                ->middleware(['churchNotCreated','validateChurch']);            
+                
+
+                Route::middleware('churchCreated')->group(function () {
+                    
+                    // fetch church
+                    Route::get('/', 'ChurchController@show');
+                
+                    // update church info
+                    Route::put('/update', 'ChurchController@update');
             
-            // create church
-            Route::post('/create', 'ChurchController@create')
-            ->middleware(['churchNotCreated','validateChurch']);
+                    // upload church image
+                    Route::post('/upload-image', 'ChurchController@uploadImage')
+                    ->middleware('validateImage');
             
-            // update church info
-            Route::put('/update', 'ChurchController@update')
-            ->middleware('churchCreated');
+                    // delete church image
+                    Route::post('/delete-image/{image}', 'ChurchController@deleteImage')
+                    ->middleware('imageExist');
+                
+                });
             
-            // upload church image
-            Route::post('/upload-image', 'ChurchController@uploadImage')
-            ->middleware(['validateImage', 'churchCreated']);
-            
-            // delete church image
-            Route::post('/delete-image', 'ChurchController@deleteImage')
-            ->middleware(['churchCreated', 'imageExist']);
+            });
         
         });
     
-    
     });
-
 
 });

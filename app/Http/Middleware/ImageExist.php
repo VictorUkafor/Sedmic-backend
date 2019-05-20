@@ -23,12 +23,13 @@ class ImageExist
         ->first();
         
         
-        if(strpos($church->images, $image) !== true){
-            return response()->json([
-                'errorMessage' => 'Image does not exist'
-            ], 404);           
+        if(strpos($church->images, $image) !== false){
+            return $next($request);   
         }
-        
-        return $next($request);           
+
+        return response()->json([
+            'errorMessage' => 'Image can not be found'
+        ], 404);
+                    
     }
 }
