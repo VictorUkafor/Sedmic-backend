@@ -129,6 +129,22 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
             });
         
         });
+
+
+        Route::group([
+           'prefix' => 'members', 'middleware' => 'churchCreated'
+        ],function () {
+            
+            // create member
+            Route::post('/', 'MemberController@create')
+            ->middleware('memberSignup');
+
+            // view members
+            Route::get('/', 'MemberController@viewAll');
+
+
+
+        });
     
     });
 

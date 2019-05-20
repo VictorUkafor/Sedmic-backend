@@ -28,6 +28,7 @@ class ChurchCreated
         }
 
         $request->church = $church;
+        $request->user = $user;
         
         return $next($request);           
     }

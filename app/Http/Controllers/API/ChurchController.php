@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Church;
 use App\Http\Controllers\Controller;
+use JD\Cloudder\Facades\Cloudder;
 use Illuminate\Http\Request;
 
 class ChurchController extends Controller

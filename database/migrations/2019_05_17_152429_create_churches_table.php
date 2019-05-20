@@ -14,7 +14,7 @@ class CreateChurchesTable extends Migration
     public function up()
     {
         Schema::create('churches', function (Blueprint $table) {
-            $table->bigIncrements('id');
+            $table->increments('id');
             $table->string('username');
             $table->string('name_of_church');
             $table->string('venue')->nullable();
