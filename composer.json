@@ -1,7 +1,7 @@
 {
-    "name": "laravel/sedmic",
+    "name": "sedmic/sedmic",
     "description": "Sedmic 1.0.0",
-    "keywords": ["framework", "laravel"],
+    "keywords": ["laravel", "REST API", "php", "jwt", "cloudinary"],
     "license": "MIT",
     "type": "project",
     "require": {

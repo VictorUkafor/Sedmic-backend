@@ -209,6 +209,26 @@ public function login(Request $request){
     }
 
 
+    public function changeRight(Request $request, $userId)
+    {
+        $user = User::find($userId);
+        $user->account_type = $request->account_type ? 
+        $request->account_type : $user->account_type;
+       
+        if ($user->save()) {
+            return response()->json([
+                'successMessage' => 'Action successful',
+                'user' => $user,
+            ], 201); 
+
+        } else {
+            return response()->json([
+                'errorMessage' => 'Internal server error'
+            ], 500);
+        }
+    }
+
+
     public function removeAdmin(Request $request, $userId)
     {
         $soft_delete_user = User::destroy($userId);
@@ -280,8 +300,9 @@ public function login(Request $request){
           // if an image is uploaded, save to cloudinary
           // and deletes the previous one
           if(strlen($image_name) !== 0){
-              Cloudder::delete($user->username); 
-              Cloudder::upload($image_name, $user->username); 
+              if(Cloudder::delete($user->username)){
+                Cloudder::upload($image_name, $user->username);  
+              }   
           } 
           
           if ($user->save()) {

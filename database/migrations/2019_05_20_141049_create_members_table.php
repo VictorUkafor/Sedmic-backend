@@ -26,11 +26,13 @@ class CreateMembersTable extends Migration
             $table->string('address')->nullable();
             $table->string('image')->nullable();
             $table->date('date_of_birth')->nullable();
+            $table->date('birthday')->nullable();
             $table->string('occupation')->nullable();
-            $table->timestamps();
+            $table->string('age_category')->nullable();
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
             $table->integer('deleted_by')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
 

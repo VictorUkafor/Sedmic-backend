@@ -20,6 +20,8 @@ class ValidateMemberSignup
             'first_name' => ['required', 'regex:/^\S*$/u'],
             'last_name' => ['required', 'regex:/^\S*$/u'],
             'image' => 'image',
+            'date_of_birth' => 'date',
+            'birthday' => 'date',
         ]);
 
         if ($validator->fails()) {

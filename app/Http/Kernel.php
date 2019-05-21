@@ -71,6 +71,10 @@ class Kernel extends HttpKernel
         'imageExist' => \App\Http\Middleware\ImageExist::class,
         'signupSuccess' => \App\Http\Middleware\SignupSuccess::class,
         'memberSignup' => \App\Http\Middleware\ValidateMemberSignup::class,
+        'membersExist' => \App\Http\Middleware\MembersExist::class,
+        'memberExist' => \App\Http\Middleware\MemberExist::class,
+        'canUpdate' => \App\Http\Middleware\CanUpdateMember::class,
+        'canDelete' => \App\Http\Middleware\CanDeleteMember::class,
 
 
         //jwt auth

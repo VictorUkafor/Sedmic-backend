@@ -2,11 +2,13 @@
 
 namespace App\Http\Middleware;
 
-use App\User;
+
+use App\Member;
+use App\Church;
 use Closure;
 use Validator;
 
-class MyAdmins
+class MembersExist
 {
     /**
      * Handle an incoming request.
@@ -17,16 +19,19 @@ class MyAdmins
      */
     public function handle($request, Closure $next)
     {
-        $user_id = (int)$request->route('userId');
-        $super_user = auth()->user();
-        $user = User::find($user_id);
+        $user = auth()->user();
+        $church = Church::where('username', $user->church_username)
+        ->first();
+
+        $members = Member::where('church_id', $church->id)
+        ->first();
+
         
-        if($super_user->id === $user_id || 
-        $super_user->username !== $user->church_username){
+        if(!$members){
             return response()->json([
-                'errorMessage' => 'Unauthorized action'
-            ], 401);           
-        } 
+                'errorMessage' => 'Members can not found'
+            ], 404);           
+        }
         
         return $next($request);           
     }

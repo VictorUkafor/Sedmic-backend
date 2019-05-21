@@ -51,6 +51,9 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
 
                 // remove admin
                 Route::delete('/remove/{userId}', 'UserController@removeAdmin');
+
+                // change admin right
+                Route::post('/right/{userId}', 'UserController@changeRight');
             
             });
         });
@@ -140,9 +143,24 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
             ->middleware('memberSignup');
 
             // view members
-            Route::get('/', 'MemberController@viewAll');
+            Route::get('/', 'MemberController@viewAll')
+            ->middleware('membersExist');
 
 
+            Route::middleware('memberExist')->group(function () {
+                
+                // view member
+                Route::get('/{member_id}', 'MemberController@show');
+
+                // update member
+                Route::put('/{member_id}', 'MemberController@update')
+                ->middleware('canUpdate');
+
+                // update member
+                Route::delete('/{member_id}', 'MemberController@delete')
+                ->middleware('canDelete');
+            
+            });
 
         });
     

@@ -39,6 +39,8 @@ class Member extends Model
         'occupation',
         'email',
         'image',
+        'birthday',
+        'age_category',
         'created_by',
         'updated_by',
         'deleted_by'
