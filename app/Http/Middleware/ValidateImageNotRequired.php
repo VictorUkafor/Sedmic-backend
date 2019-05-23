@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateConfirm
+class ValidateImageNotRequired
 {
     /**
      * Handle an incoming request.
@@ -17,8 +17,7 @@ class ValidateConfirm
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'username' => ['required', 'min:7', 'unique:users,username', 'regex:/^\S*$/u'],
-            'email' => 'required|email',
+            'image' => 'image',
         ]);
 
         if ($validator->fails()) {

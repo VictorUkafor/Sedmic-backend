@@ -26,7 +26,9 @@ class ValidateActivate
 
         if ($validator->fails()) {
             $errors = $validator->errors();
-            return response()->json($errors, 400);
+            return response()->json([
+                'errors' => $errors
+            ], 400);
         }
 
         return $next($request);

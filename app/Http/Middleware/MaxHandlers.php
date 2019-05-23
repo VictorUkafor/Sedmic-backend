@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateImage
+class MaxHandlers
 {
     /**
      * Handle an incoming request.
@@ -16,17 +16,14 @@ class ValidateImage
      */
     public function handle($request, Closure $next)
     {
-        $validator = Validator::make($request->all(), [
-            'images' => 'required|image',
-        ]);
+        $handlers = explode(" ", $request->handlers);
 
-        if ($validator->fails()) {
-            $errors = $validator->errors();
+        if(count($handlers) > 3){
             return response()->json([
-                'errors' => $errors
-            ], 400);
+                'errorMessage' => "You can not add more than 3 handlers"
+            ], 401);  
         }
-
-        return $next($request);
+        
+        return $next($request);    
     }
 }

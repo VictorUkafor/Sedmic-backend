@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 |
 */
 
-
 Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
     Route::prefix('auth')->group(function () {
 
@@ -27,6 +26,28 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
             Route::post('activate/{token}', 'UserController@signupActivate')
             ->middleware('validateActivate');
         });
+
+        // login route
+        Route::post('login', 'UserController@login')
+        ->middleware('validateLogin');
+
+
+        // // Password resets routes
+        Route::prefix('password-reset')->group(function () {
+            
+            // request password reset route
+            Route::post('/request', 'PasswordResetController@create')
+           ->middleware('validateUsername');
+        
+            // get token for reset
+            Route::get('/find/{token}', 'PasswordResetController@find');    
+        
+            // reset password route
+            Route::post('/reset/{token}', 'PasswordResetController@reset')
+            ->middleware('validatePassword');
+
+        });
+        
         
         // user admins routes
         Route::group([
@@ -56,28 +77,6 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 Route::post('/right/{userId}', 'UserController@changeRight');
             
             });
-        });
-
-
-        // login route
-        Route::post('login', 'UserController@login')
-        ->middleware('validateLogin');
-
-
-        // // Password resets routes
-        Route::prefix('password-reset')->group(function () {
-            
-            // request password reset route
-            Route::post('/request', 'PasswordResetController@create')
-           ->middleware('validateUsername');
-        
-            // get token for reset
-            Route::get('/find/{token}', 'PasswordResetController@find');    
-        
-            // reset password route
-            Route::post('/reset/{token}', 'PasswordResetController@reset')
-            ->middleware('validatePassword');
-
         });
 
     });
@@ -136,7 +135,7 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
 
         Route::group([
            'prefix' => 'members', 'middleware' => 'churchCreated'
-        ],function () {
+        ], function () {
             
             // create member
             Route::post('/', 'MemberController@create')
@@ -161,6 +160,34 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 ->middleware('canDelete');
             
             });
+
+        });
+
+
+        Route::group([
+            'prefix' => 'units', 'middleware' => 'churchCreated'
+         ], function () {
+            
+            // create unit
+            Route::post('/', 'UnitController@create')
+            ->middleware(['diamondOrGold', 'validateUnit', 
+            'uniqueName', 'maxHandlers']);
+
+            // view all units
+            Route::get('/', 'UnitController@viewAll')
+            ->middleware('unitsExist');
+
+            // view a single unit
+            Route::get('/{unit_id}', 'UnitController@show')
+            ->middleware('unitExist');
+
+            // update a single unit
+            Route::put('/{unit_id}', 'UnitController@update')
+            ->middleware(['unitExist', 'dgs', 'imageValid', 'uniqueName']);
+
+            // update a single unit
+            Route::put('/handler/{unit_id}', 'UnitController@addHandlers')
+            ->middleware(['unitExist', 'dgs', 'addHandlers']);
 
         });
     

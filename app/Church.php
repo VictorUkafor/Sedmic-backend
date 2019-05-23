@@ -15,6 +15,15 @@ class Church extends Model
         return $this->hasMany('App\Member');
     }
 
+
+    /**
+     * Get the members of the church.
+     */
+    public function units()
+    {
+        return $this->hasMany('App\Unit');
+    }
+
     protected $guarded = ['id'];
 
     

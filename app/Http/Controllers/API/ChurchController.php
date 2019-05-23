@@ -29,24 +29,12 @@ class ChurchController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        $images = '';
-
-        if($request->images){
-            foreach ($request->images as $key => $image) {
-                Cloudder::upload($image->getRealPath(), 
-                'church'.$user->church_username.$key);
-
-                $images .= 'church'.$user->church_username.$key.' ';
-            }
-        }
-
 
         $church = new Church;
         $church->name_of_church = $request->name_of_church;
         $church->username = $user->username;
         $church->official_email = $request->official_email;
         $church->venue = $request->venue;
-        $church->images = $images;
         $church->minister_in_charge = $request->minister_in_charge;
         $church->contact_numbers = $request->contact_numbers;
 
@@ -109,7 +97,7 @@ class ChurchController extends Controller
         // }
 
         $image_public_id = $church->username.'image'.md5(microtime(true).mt_Rand());
-        // Cloudder::upload($image->getRealPath(), $image_public_id);
+         Cloudder::upload($image->getRealPath(), $image_public_id);
 
         $images .= $image_public_id.' ';
         
@@ -136,11 +124,11 @@ class ChurchController extends Controller
 
         $images = $church->images;
 
-        //$delete = Cloudder::delete($image); 
+        $delete = Cloudder::delete($image); 
 
-        //if($delete){
+        if($delete){
           $images = str_replace($image, '', $images);  
-        //}
+        }
 
         $church->images = $images;
 
