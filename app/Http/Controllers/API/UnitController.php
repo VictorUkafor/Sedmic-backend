@@ -16,10 +16,10 @@ class UnitController extends Controller
         $user = $request->user;
         $church = $request->church;
 
-        $image = $request->image ? 
-        $church->username.str_replace(' ', '', $request->name).md5(microtime(true).mt_Rand()) : '';
-
         $type = strtolower(str_replace(' ', '_', $request->type));
+
+        $image = $request->image ? 
+        $church->username.$type.md5(microtime(true).mt_Rand()) : '';
 
         $unit = new Unit;
         $unit->name = strtolower($request->name);
@@ -46,6 +46,7 @@ class UnitController extends Controller
             'errorMessage' => 'Internal server error'
         ], 500);
     }
+
     
     // view all units
     public function viewAll(Request $request)
@@ -88,18 +89,22 @@ class UnitController extends Controller
             $church = $request->church;
             $unit = $request->unit;
 
-            $name = $request->name ? 
-            strtolower($request->name) : $unit->name;
-
-            $image = $request->image ? 
-            $church->username.str_replace(' ', '', $name).md5(microtime(true).mt_Rand()) :
-            $unit->image;
-
-            $unit->name = $name;
-
-            $unit->type = $request->type ? 
+            // get type to be updated
+            $type = $request->type ? 
             strtolower(str_replace(' ', '_', $request->type)) :
             $unit->type;
+
+            // get image to be updated
+            $image = $request->image ? 
+            $church->username.str_replace(' ', '_', $type).md5(microtime(true).mt_Rand()) :
+            $unit->image;
+
+
+            // update logic
+            $unit->name = $request->name ? 
+            strtolower($request->name) : $unit->name;
+
+            $unit->type = $type;
 
             $unit->description = $request->description ? 
             $request->description : $unit->description;
@@ -120,7 +125,7 @@ class UnitController extends Controller
         }
 
 
-    // update unit
+    // adds an handler
     public function addHandlers(Request $request)
         {
 
@@ -129,7 +134,7 @@ class UnitController extends Controller
 
 
             $unit->handlers = $request->handlers ? 
-            $unit->handlers.' '.$request->handlers : $unit->handlers;
+            trim($unit->handlers.' '.$request->handlers) : $unit->handlers;
 
             $unit->updated_by = $request->user->id;
 
@@ -146,10 +151,11 @@ class UnitController extends Controller
         }
 
 
-        public function RemoveHandler(Request $request, $handler)
+        // removes an handler
+        public function removeHandler(Request $request, $unit_id, $handler)
         {
             $unit = $request->unit;
-            $handlers = str_replace($unit->handlers, '', $handler); 
+            $handlers = str_replace($handler, '', $unit->handlers); 
     
             $unit->handlers = $handlers;
             $unit->updated_by = $request->user->id;
@@ -167,6 +173,7 @@ class UnitController extends Controller
         }
 
 
+        // deletes unit
         public function delete(Request $request, $unit_id)
         {
             $image = $request->unit->image; 

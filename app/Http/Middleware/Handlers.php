@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Unit;
 use Closure;
 use Validator;
 
-class DiamondGoldSelf
+class Handlers
 {
     /**
      * Handle an incoming request.

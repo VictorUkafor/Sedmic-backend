@@ -63,18 +63,18 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 ])->group(function () {
                 
                 // active admin
-                Route::post('/activate/{userId}', 'UserController@activateAdmin')
+                Route::post('/{userId}/activate', 'UserController@activateAdmin')
                 ->middleware('signupSuccess');
 
                 // block admin
-                Route::post('/block/{userId}', 'UserController@blockAdmin')
+                Route::post('/{userId}/block', 'UserController@blockAdmin')
                 ->middleware('signupSuccess');
 
                 // remove admin
-                Route::delete('/remove/{userId}', 'UserController@removeAdmin');
+                Route::delete('/{userId}/remove', 'UserController@removeAdmin');
 
                 // change admin right
-                Route::post('/right/{userId}', 'UserController@changeRight');
+                Route::post('/{userId}/right', 'UserController@changeRight');
             
             });
         });
@@ -179,15 +179,23 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
 
             // view a single unit
             Route::get('/{unit_id}', 'UnitController@show')
-            ->middleware('unitExist');
+            ->middleware(['unitExist', 'handlers']);
 
             // update a single unit
             Route::put('/{unit_id}', 'UnitController@update')
-            ->middleware(['unitExist', 'dgs', 'imageValid', 'uniqueName']);
+            ->middleware(['unitExist', 'handlers', 'imageValid', 'uniqueName']);
 
-            // update a single unit
-            Route::put('/handler/{unit_id}', 'UnitController@addHandlers')
-            ->middleware(['unitExist', 'dgs', 'addHandlers']);
+            // adds an handler
+            Route::post('/{unit_id}/add-handlers', 'UnitController@addHandlers')
+            ->middleware(['unitExist', 'diamondOrGold', 'addHandlers']);
+
+            // removes an handler
+            Route::post('/{unit_id}/remove-handler/{handler}', 'UnitController@removeHandler')
+            ->middleware(['unitExist', 'diamondOrGold']);
+
+            // deletes a unit
+            Route::delete('/{unit_id}/delete', 'UnitController@delete')
+            ->middleware(['unitExist', 'diamondOrGold']);
 
         });
     

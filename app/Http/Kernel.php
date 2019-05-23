@@ -83,7 +83,7 @@ class Kernel extends HttpKernel
         'uniqueName' => \App\Http\Middleware\UniqueUnitName::class,
         'maxHandlers' => \App\Http\Middleware\MaxHandlers::class,
         'addHandlers' => \App\Http\Middleware\AddHandlers::class,
-        'dgs' => \App\Http\Middleware\DiamondGoldSelf::class,
+        'handlers' => \App\Http\Middleware\Handlers::class,
 
 
         //jwt auth
