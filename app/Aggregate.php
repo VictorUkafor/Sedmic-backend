@@ -5,7 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
-class Unit extends Model
+class Aggregate extends Model
 {
     use SoftDeletes;
 
@@ -28,7 +28,8 @@ class Unit extends Model
     protected $fillable = [
         'church_id',
         'name',
-        'type',
+        'level',
+        'sub_unit_type',
         'handlers',
         'description',
         'image',

@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use App\Unit;
+use App\Aggregate;
 use Closure;
 use Validator;
 
-class UnitExist
+class AggregateExist
 {
     /**
      * Handle an incoming request.
@@ -17,24 +17,24 @@ class UnitExist
      */
     public function handle($request, Closure $next)
     {
-        $id = $request->route('unit_id');
+        $id = $request->route('aggregate_id');
         $church = $request->church;
-        $unit = Unit::find($id);
+        $aggregate = Aggregate::find($id);
         
 
-        if(!$unit){
+        if(!$aggregate){
             return response()->json([
-                'errorMessage' => 'Unit can not be found'
+                'errorMessage' => 'Aggregate can not be found'
             ], 404); 
         }
 
-        if($unit->church_id !== $church->id){
+        if($aggregate->church_id !== $church->id){
             return response()->json([
                 'errorMessage' => 'Unauthorized'
             ], 401); 
         }
         
-        $request->unit = $unit;
+        $request->aggregate = $aggregate;
         return $next($request);
         
     }

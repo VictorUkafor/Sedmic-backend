@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class AddHandlers
+class AddAggregateHandlers
 {
     /**
      * Handle an incoming request.
@@ -16,13 +16,13 @@ class AddHandlers
      */
     public function handle($request, Closure $next)
     {
-        $old_handlers = explode(" ", $request->unit->handlers);
+        $old_handlers = explode(" ", trim($request->aggregate->handlers));
         $new_handlers = explode(" ", $request->handlers);
-        $handlers = $old_handlers + $new_handlers;
+        $handlers_number = count($old_handlers) + count($new_handlers);
 
-        if(count($handlers) > 3){
+        if($handlers_number > 3){
             return response()->json([
-                'errorMessage' => "You can not have more than 3 handlers"
+                'errorMessage' => 'You can only have 3 handlers'
             ], 401);  
         }
         

@@ -66,7 +66,7 @@ class UserController extends Controller
 
     $user->active = $active;
     $user->activation_token = '';
-    $user->full_name = $request->full_name;
+    $user->full_name = strtolower(preg_replace('/\s+/', ' ', $request->full_name));
     $user->image = $image_public_id;
     $user->sex = $request->sex;
     $user->date_of_birth = $request->date_of_birth;

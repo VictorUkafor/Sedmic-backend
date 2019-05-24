@@ -17,11 +17,20 @@ class Church extends Model
 
 
     /**
-     * Get the members of the church.
+     * Get the units of the church.
      */
     public function units()
     {
         return $this->hasMany('App\Unit');
+    }
+
+
+    /**
+     * Get the aggregates of the church.
+     */
+    public function aggregates()
+    {
+        return $this->hasMany('App\Aggregate');
     }
 
     protected $guarded = ['id'];

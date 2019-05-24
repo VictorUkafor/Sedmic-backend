@@ -47,28 +47,32 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
             ->middleware('validatePassword');
 
         });
-        
-        
+
+    });
+
+
+    Route::middleware('jwt.auth')->group(function () {
+
         // user admins routes
         Route::group([
-            'middleware' => 'jwt.auth', 'prefix' => 'admin'
+            'middleware' => 'checkDiamond', 'prefix' => 'admins'
         ], function () {
             
             // create admin
-            Route::post('/create', 'UserController@createAdmin')
+            Route::post('/', 'UserController@createAdmin')
             ->middleware('validateConfirm');
                 
-            Route::middleware([
-                'findUser', 'myAdmins'
-                ])->group(function () {
-                
-                // active admin
-                Route::post('/{userId}/activate', 'UserController@activateAdmin')
-                ->middleware('signupSuccess');
+            Route::middleware(['findUser', 'myAdmins'])->group(function () {
 
-                // block admin
-                Route::post('/{userId}/block', 'UserController@blockAdmin')
-                ->middleware('signupSuccess');
+                Route::middleware('signupSuccess')->group(function () {
+                
+                    // activate admin
+                    Route::post('/{userId}/activate', 'UserController@activateAdmin');
+
+                    // block admin
+                    Route::post('/{userId}/block', 'UserController@blockAdmin');
+                
+                });
 
                 // remove admin
                 Route::delete('/{userId}/remove', 'UserController@removeAdmin');
@@ -78,11 +82,7 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
             
             });
         });
-
-    });
-
-
-    Route::middleware('jwt.auth')->group(function () {
+        
         
         // user routes
         Route::prefix('user')->group(function () {
@@ -96,17 +96,13 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
         });
         
         
-        // church crude route
+        // church routes
         Route::prefix('church')->group(function () {
-
-            // fetch church
-            Route::get('/', 'ChurchController@show')
-            ->middleware('churchCreated');
-
+            
             Route::middleware('checkDiamond')->group(function () {
                 
                 // create church
-                Route::post('/create', 'ChurchController@create')
+                Route::post('/', 'ChurchController@create')
                 ->middleware(['churchNotCreated','validateChurch']);            
                 
 
@@ -133,70 +129,130 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
         });
 
 
-        Route::group([
-           'prefix' => 'members', 'middleware' => 'churchCreated'
-        ], function () {
+        Route::middleware('churchCreated')->group(function () {
             
-            // create member
-            Route::post('/', 'MemberController@create')
-            ->middleware('memberSignup');
-
-            // view members
-            Route::get('/', 'MemberController@viewAll')
-            ->middleware('membersExist');
-
-
-            Route::middleware('memberExist')->group(function () {
+            Route::prefix('members')->group(function () {
                 
-                // view member
-                Route::get('/{member_id}', 'MemberController@show');
+                // create member
+                Route::post('/', 'MemberController@create')
+                ->middleware('memberSignup');
 
-                // update member
-                Route::put('/{member_id}', 'MemberController@update')
-                ->middleware('canUpdate');
+                // view members
+                Route::get('/', 'MemberController@viewAll')
+                ->middleware('membersExist');
+                
+                
+                Route::middleware('memberExist')->group(function () {
+                    
+                    // view member
+                    Route::get('/{member_id}', 'MemberController@show');
 
-                // update member
-                Route::delete('/{member_id}', 'MemberController@delete')
-                ->middleware('canDelete');
+                    // update member
+                    Route::put('/{member_id}', 'MemberController@update')
+                    ->middleware('canUpdate');
+
+                    // update member
+                    Route::delete('/{member_id}', 'MemberController@delete')
+                    ->middleware('canDelete');
+                
+                });
+            
+            });
+            
+            
+            // units
+            Route::prefix('units')->group(function () {
+                
+                // create unit
+                Route::post('/', 'UnitController@create')
+                ->middleware(['diamondOrGold', 'validateUnit', 
+                'uniqueName', 'maxHandlers', 'validateHandlers']);
+
+                // view all units
+                Route::get('/', 'UnitController@viewAll')
+                ->middleware('unitsExist');
+                
+                
+                Route::middleware('unitExist')->group(function () {
+                    
+                    Route::middleware('unitHandlers')->group(function () {
+                        
+                        // view a single unit
+                        Route::get('/{unit_id}', 'UnitController@show');
+
+                        // update a single unit
+                        Route::put('/{unit_id}', 'UnitController@update')
+                        ->middleware(['imageNotRequired', 'uniqueName']);
+                    
+                    });
+                    
+                    
+                    Route::middleware('diamondOrGold')->group(function () {
+                        
+                        // adds an handler
+                        Route::post('/{unit_id}/add-handlers', 'UnitController@addHandlers')
+                        ->middleware('addUnitHandlers');
+
+                        // removes an handler
+                        Route::post('/{unit_id}/remove-handler/{handler}', 
+                        'UnitController@removeHandler');
+
+                        // deletes a unit
+                        Route::delete('/{unit_id}', 'UnitController@delete');
+                    
+                    });
+                
+                });
             
             });
 
-        });
+            // units
+            Route::prefix('aggregates')->group(function () {
+                
+                // create an aggregate
+                Route::post('/', 'AggregateController@create')
+                ->middleware(['diamondOrGold', 'validateAggregate', 
+                'uniqueAggName', 'maxHandlers', 'noSubs', 'validateHandlers']);
 
+                // view all aggregates
+                Route::get('/', 'AggregateController@viewAll')
+                ->middleware('aggregatesExist');
+                
+                
+                Route::middleware('aggregateExist')->group(function () {
+                    
+                    Route::middleware('aggregateHandlers')->group(function () {
+                        
+                        // view a single aggregate
+                        Route::get('/{aggregate_id}', 'AggregateController@show');
 
-        Route::group([
-            'prefix' => 'units', 'middleware' => 'churchCreated'
-         ], function () {
+                        // update a single unit
+                        Route::put('/{aggregate_id}', 'AggregateController@update')
+                        ->middleware(['imageNotRequired', 'uniqueAggName']);
+                    
+                    });
+                    
+                    
+                    Route::middleware('diamondOrGold')->group(function () {
+                        
+                        // adds an handler
+                        Route::post('/{aggregate_id}/add-handlers', 'AggregateController@addHandlers')
+                        ->middleware('addAggregateHandlers');
+
+                        // removes an handler
+                        Route::post('/{aggregate_id}/remove-handler/{handler}', 
+                        'AggregateController@removeHandler');
+
+                        // deletes a unit
+                        Route::delete('/{aggregate_id}', 'AggregateController@delete');
+                    
+                    });
+                
+                 });
             
-            // create unit
-            Route::post('/', 'UnitController@create')
-            ->middleware(['diamondOrGold', 'validateUnit', 
-            'uniqueName', 'maxHandlers']);
+            });
 
-            // view all units
-            Route::get('/', 'UnitController@viewAll')
-            ->middleware('unitsExist');
-
-            // view a single unit
-            Route::get('/{unit_id}', 'UnitController@show')
-            ->middleware(['unitExist', 'handlers']);
-
-            // update a single unit
-            Route::put('/{unit_id}', 'UnitController@update')
-            ->middleware(['unitExist', 'handlers', 'imageValid', 'uniqueName']);
-
-            // adds an handler
-            Route::post('/{unit_id}/add-handlers', 'UnitController@addHandlers')
-            ->middleware(['unitExist', 'diamondOrGold', 'addHandlers']);
-
-            // removes an handler
-            Route::post('/{unit_id}/remove-handler/{handler}', 'UnitController@removeHandler')
-            ->middleware(['unitExist', 'diamondOrGold']);
-
-            // deletes a unit
-            Route::delete('/{unit_id}/delete', 'UnitController@delete')
-            ->middleware(['unitExist', 'diamondOrGold']);
-
+        
         });
     
     });

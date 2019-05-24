@@ -6,7 +6,7 @@ use App\Unit;
 use Closure;
 use Validator;
 
-class Handlers
+class UnitHandlers
 {
     /**
      * Handle an incoming request.

@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateUnit
+class ValidateAggregate
 {
     /**
      * Handle an incoming request.
@@ -18,7 +18,8 @@ class ValidateUnit
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'type' => 'required',
+            'level' => 'required',
+            'sub_unit_type' => 'required',
             'image' => 'image',
         ]);
 

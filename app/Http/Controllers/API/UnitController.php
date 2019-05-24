@@ -16,7 +16,7 @@ class UnitController extends Controller
         $user = $request->user;
         $church = $request->church;
 
-        $type = strtolower(str_replace(' ', '_', $request->type));
+        $type = strtolower(preg_replace('/\s+/', '_', $request->type));
 
         $image = $request->image ? 
         $church->username.$type.md5(microtime(true).mt_Rand()) : '';
@@ -91,12 +91,12 @@ class UnitController extends Controller
 
             // get type to be updated
             $type = $request->type ? 
-            strtolower(str_replace(' ', '_', $request->type)) :
+            strtolower(preg_replace('/\s+/', '_', $request->type)) :
             $unit->type;
 
             // get image to be updated
             $image = $request->image ? 
-            $church->username.str_replace(' ', '_', $type).md5(microtime(true).mt_Rand()) :
+            $church->username.preg_replace('/\s+/', '_', $type).md5(microtime(true).mt_Rand()) :
             $unit->image;
 
 
@@ -132,9 +132,19 @@ class UnitController extends Controller
             $church = $request->church;
             $unit = $request->unit;
 
+            $handlers = '';
+
+            foreach(explode(" ", preg_replace('/\s+/', ' ', $request->handlers)) as $handler){
+                if(!in_array($handler, explode(" ", trim(
+                    preg_replace('/\s+/', ' ', $unit->handlers))))){
+                    $handlers .= ' '.$handler;
+                }
+
+            }
 
             $unit->handlers = $request->handlers ? 
-            trim($unit->handlers.' '.$request->handlers) : $unit->handlers;
+            trim(preg_replace('/\s+/', ' ', $unit->handlers.' '.$handlers)) : 
+            $unit->handlers;
 
             $unit->updated_by = $request->user->id;
 
@@ -155,7 +165,7 @@ class UnitController extends Controller
         public function removeHandler(Request $request, $unit_id, $handler)
         {
             $unit = $request->unit;
-            $handlers = str_replace($handler, '', $unit->handlers); 
+            $handlers = trim(str_replace($handler, '', $unit->handlers)); 
     
             $unit->handlers = $handlers;
             $unit->updated_by = $request->user->id;

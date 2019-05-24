@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUnitsTable extends Migration
+class CreateAggregatesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,12 @@ class CreateUnitsTable extends Migration
      */
     public function up()
     {
-        Schema::create('units', function (Blueprint $table) {
+        Schema::create('aggregates', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('church_id')->unsigned()->nullable();
-            $table->string('type');
             $table->string('name');
+            $table->integer('level');
+            $table->string('sub_unit_type');
             $table->string('handlers')->nullable();
             $table->string('description')->nullable();
             $table->string('image')->nullable();
@@ -29,7 +30,7 @@ class CreateUnitsTable extends Migration
             $table->softDeletes();
         });
 
-        Schema::table('units', function($table) {
+        Schema::table('aggregates', function($table) {
             $table->foreign('church_id')->references('id')
             ->on('churches')->onDelete('cascade');
           });
@@ -42,6 +43,6 @@ class CreateUnitsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('units');
+        Schema::dropIfExists('aggregates');
     }
 }
