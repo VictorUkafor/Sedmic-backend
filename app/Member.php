@@ -10,6 +10,15 @@ class Member extends Model
     use SoftDeletes;
 
     /**
+     * Get the units of the member.
+     */
+    public function units()
+    {
+        return $this->belongsToMany('App\Unit')
+        ->withTimestamps();
+    }
+
+    /**
      * Get the church that owns the member.
      */
     public function church()

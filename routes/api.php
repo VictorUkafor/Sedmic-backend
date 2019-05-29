@@ -183,6 +183,19 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                         // update a single unit
                         Route::put('/{unit_id}', 'UnitController@update')
                         ->middleware(['imageNotRequired', 'uniqueName']);
+
+                        Route::middleware('memberExist')->group(function () {
+                            
+                            // add member to unit
+                            Route::post('/{unit_id}/members/{member_id}', 
+                            'UnitMemberController@addMember')->middleware('isMember');
+
+                            // remove member from unit
+                            Route::delete('/{unit_id}/members/{member_id}', 
+                            'UnitMemberController@removeMember')->middleware('notMember');
+
+                        });
+
                     
                     });
                     
@@ -226,9 +239,17 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                         // view a single aggregate
                         Route::get('/{aggregate_id}', 'AggregateController@show');
 
-                        // update a single unit
+                        // update a single aggregate
                         Route::put('/{aggregate_id}', 'AggregateController@update')
                         ->middleware(['imageNotRequired', 'uniqueAggName']);
+
+                        // add sub to aggregate
+                        Route::post('/{aggregate_id}/subs/{subId}', 'SubController@addSub')
+                        ->middleware('freeSub');
+
+                        // remove sub to aggregate
+                        Route::delete('/{aggregate_id}/subs/{subId}', 'SubController@removeSub')
+                        ->middleware('subNotYours');
                     
                     });
                     
@@ -245,6 +266,10 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
 
                         // deletes a unit
                         Route::delete('/{aggregate_id}', 'AggregateController@delete');
+
+                        // upgrade an aggregate
+                        Route::put('/{aggregate_id}/upgrade', 'AggregateController@upgrade')
+                        ->middleware(['validateUpgrade', 'upgradeAggregate', 'noSubs']);
                     
                     });
                 

@@ -66,6 +66,8 @@ class Kernel extends HttpKernel
         'validateChurch' => \App\Http\Middleware\ValidateChurchCreate::class,
         'validateUnit' => \App\Http\Middleware\ValidateUnit::class,
         'validateAggregate' => \App\Http\Middleware\ValidateAggregate::class,
+        'validateUpgrade' => \App\Http\Middleware\ValidateAggregateUpgrade::class,
+        'upgradeAggregate' => \App\Http\Middleware\UpgradeAggregate::class,
         'checkDiamond' => \App\Http\Middleware\CheckDiamond::class,
         'diamondOrGold' => \App\Http\Middleware\DiamondOrGoldUser::class,
         'churchCreated' => \App\Http\Middleware\ChurchCreated::class,
@@ -92,7 +94,10 @@ class Kernel extends HttpKernel
         'unitHandlers' => \App\Http\Middleware\UnitHandlers::class,
         'aggregateHandlers' => \App\Http\Middleware\AggregateHandlers::class,
         'noSubs' => \App\Http\Middleware\NoSubs::class,
-
+        'subNotYours' => \App\Http\Middleware\SubNotYours::class,
+        'isMember' => \App\Http\Middleware\IsMember::class,
+        'notMember' => \App\Http\Middleware\NotMember::class,
+        'freeSub' => \App\Http\Middleware\FreeSub::class,
 
         //jwt auth
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,

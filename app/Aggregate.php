@@ -38,4 +38,20 @@ class Aggregate extends Model
         'updated_by',
         'deleted_by'
     ];
+
+    public function aggregate()
+    {
+        return $this->belongsTo('App\Aggregate', 'aggregate_id');
+    }
+
+    public function subs()
+    {
+        return $this->hasMany('App\Aggregate', 'aggregate_id');
+    }
+
+    public function units()
+    {
+        return $this->hasMany('App\Unit', 'aggregate_id');
+    }
+
 }

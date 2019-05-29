@@ -16,6 +16,8 @@ class AggregateController extends Controller
         $church = $request->church;
     
         $sub_unit_type = strtolower(preg_replace('/\s+/', '_', $request->sub_unit_type));
+
+        $type = strtolower(preg_replace('/\s+/', '_', $request->type));
     
         $image = $request->image ? 
         $church->username.$sub_unit_type.md5(microtime(true).mt_Rand()) : '';
@@ -23,6 +25,7 @@ class AggregateController extends Controller
         $aggregate = new Aggregate;
         $aggregate->church_id = $church->id;
         $aggregate->name = strtolower($request->name);
+        $aggregate->type = $type;
         $aggregate->sub_unit_type = $sub_unit_type;
         $aggregate->level = $request->level;
         $aggregate->handlers = $request->handlers;
@@ -53,7 +56,7 @@ class AggregateController extends Controller
     public function viewAll(Request $request)
     {
         foreach($request->aggregates as $aggregate){
-            $allAggregates[$aggregate->sub_unit_type][] = $aggregate;
+            $allAggregates[$aggregate->type][] = $aggregate;
         }
         
         if(count($allAggregates)) {
@@ -72,9 +75,37 @@ class AggregateController extends Controller
     // view a single aggregate
     public function show(Request $request)
     {
-        if($request->aggregate) {
+        $aggregate = $request->aggregate;
+
+        $members = [];
+        
+        if($aggregate->level == 1){
+            foreach($aggregate->units as $unit){
+                $unit->members;
+                foreach($unit->members as $member){
+                    array_push($members, $member);
+                }
+            }
+        }
+        
+        if($aggregate->level > 1){
+            for($x=1; $x <= count($aggregate->subs); $x++ ){
+                foreach($aggregate->subs as $subs){
+                    foreach($subs->units as $unit){
+                        $unit->members;
+                        foreach($unit->members as $member){
+                            array_push($members, $member);
+                        }
+                    }
+                }
+            }
+        }
+
+        $aggregate->members = $members;
+
+        if($aggregate) {
             return response()->json([
-                    'aggregate' => $request->aggregate
+                    'aggregate' => $aggregate
                 ], 200);
         }
         
@@ -87,13 +118,7 @@ class AggregateController extends Controller
     // updates aggregate
     public function update(Request $request)
     {
-        $church = $request->church;
         $aggregate = $request->aggregate;
-
-        // get sub_unit_type to be updated
-        $sub_unit_type = $request->sub_unit_type ?
-        strtolower(preg_replace('/\s+/', '_', $request->sub_unit_type)) :
-        $aggregate->sub_unit_type;
 
         // get image to be updated
         $image = $request->image ? 
@@ -105,8 +130,6 @@ class AggregateController extends Controller
         $aggregate->name = $request->name ? 
         strtolower($request->name) : $aggregate->name;
 
-        $aggregate->sub_unit_type = $sub_unit_type;
-
         $aggregate->description = $request->description ? 
         $request->description : $aggregate->description;
 
@@ -116,6 +139,43 @@ class AggregateController extends Controller
         if($aggregate->save()) {
             return response()->json([
                 'successMessage' => $aggregate->sub_unit_type.' updated successfully',
+                'aggregate' => $aggregate
+            ], 200);
+        }
+        
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+    }
+
+
+    // updates aggregate
+    public function upgrade(Request $request)
+    {
+        $aggregate = $request->aggregate;
+
+        // get sub_unit_type to be updated
+        $sub_unit_type = $request->sub_unit_type ?
+        strtolower(preg_replace('/\s+/', '_', $request->sub_unit_type)) :
+        $aggregate->sub_unit_type;
+
+        // get type to be updated
+        $type = $request->type ?
+        strtolower(preg_replace('/\s+/', '_', $request->type)) :
+        $aggregate->type;
+
+
+        $aggregate->level =  $aggregate->level + 1;
+
+        $aggregate->sub_unit_type = $sub_unit_type;
+
+        $aggregate->type = $type;
+
+        $aggregate->updated_by = $request->user->id;
+            
+        if($aggregate->save()) {
+            return response()->json([
+                'successMessage' => $aggregate->sub_unit_type.' upgraded successfully',
                 'aggregate' => $aggregate
             ], 200);
         }

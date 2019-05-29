@@ -69,8 +69,11 @@ class UnitController extends Controller
     
     // view a single unit
     public function show(Request $request)
-        {            
-            if($request->unit) {
+        {     
+            $unit = $request->unit;
+            $unit->members = $unit->members;
+            
+            if($unit) {
                 return response()->json([
                     'unit' => $request->unit
                 ], 200);

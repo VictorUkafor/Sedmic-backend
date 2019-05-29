@@ -18,6 +18,7 @@ class CreateAggregatesTable extends Migration
             $table->integer('church_id')->unsigned()->nullable();
             $table->string('name');
             $table->integer('level');
+            $table->string('type');
             $table->string('sub_unit_type');
             $table->string('handlers')->nullable();
             $table->string('description')->nullable();

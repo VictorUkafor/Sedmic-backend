@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Unit extends Model
 {
     use SoftDeletes;
+    
+    /**
+     * Get the members of the unit.
+     */
+    public function members()
+    {
+        return $this->belongsToMany('App\Member')
+        ->withTimestamps();
+    }
 
     /**
      * Get the church that owns this unit.

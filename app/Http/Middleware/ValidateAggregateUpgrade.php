@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateAggregate
+class ValidateAggregateUpgrade
 {
     /**
      * Handle an incoming request.
@@ -17,11 +17,8 @@ class ValidateAggregate
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'level' => 'required',
             'sub_unit_type' => 'required',
             'type' => 'required',
-            'image' => 'image',
         ]);
 
         if ($validator->fails()) {
