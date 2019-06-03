@@ -91,7 +91,9 @@ class Kernel extends HttpKernel
         'validateHandlers' => \App\Http\Middleware\ValidateHandlers::class,
         'validatePosition' => \App\Http\Middleware\ValidatePosition::class,
         'unitPosition' => \App\Http\Middleware\UnitPositionExist::class,
+        'aggregatePosition' => \App\Http\Middleware\AggregatePositionExist::class,
         'removeUnitPosition' => \App\Http\Middleware\RemoveUnitPosition::class,
+        'removeAggregatePosition' => \App\Http\Middleware\RemoveAggregatePosition::class,
         'addUnitHandlers' => \App\Http\Middleware\AddUnitHandlers::class,
         'addAggregateHandlers' => \App\Http\Middleware\AddAggregateHandlers::class,
         'unitHandlers' => \App\Http\Middleware\UnitHandlers::class,
@@ -102,6 +104,7 @@ class Kernel extends HttpKernel
         'notMember' => \App\Http\Middleware\NotMember::class,
         'freeSub' => \App\Http\Middleware\FreeSub::class,
         'unitMembers' => \App\Http\Middleware\UnitMembers::class,
+        'aggregateMembers' => \App\Http\Middleware\AggregateMembers::class,
 
         //jwt auth
         'jwt.auth' => \Tymon\JWTAuth\Middleware\GetUserFromToken::class,

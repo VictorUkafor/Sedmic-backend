@@ -14,8 +14,7 @@ class Member extends Model
      */
     public function units()
     {
-        return $this->belongsToMany('App\Unit')
-        ->withTimestamps();
+        return $this->belongsToMany('App\Unit');
     }
 
     /**
@@ -23,8 +22,16 @@ class Member extends Model
      */
     public function unitPositions()
     {
-        return $this->hasMany('App\UnitExecutive')
-        ->withTimestamps();
+        return $this->hasMany('App\UnitExecutive');
+    }
+
+
+    /**
+     * Get the aggregate positions of the member.
+     */
+    public function AggregatePositions()
+    {
+        return $this->hasMany('App\AggregateExecutive');
     }
 
     /**

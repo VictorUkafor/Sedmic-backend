@@ -151,7 +151,7 @@ Route::group([
                 Route::get('/', 'MemberController@viewAll')
                 ->middleware('membersExist');
                 
-                
+                // routes for single member
                 Route::group([
                     'prefix' => '{member_id}',
                     'middleware' => 'memberExist'
@@ -164,7 +164,7 @@ Route::group([
                     Route::put('/', 'MemberController@update')
                     ->middleware('canUpdate');
 
-                    // update member
+                    // delete member
                     Route::delete('/', 'MemberController@delete')
                     ->middleware('canDelete');
                 
@@ -185,7 +185,7 @@ Route::group([
                 Route::get('/', 'UnitController@viewAll')
                 ->middleware('unitsExist');
                 
-                
+                // routes for single unit
                 Route::group([
                     'prefix' => '{unit_id}',
                     'middleware' => 'unitExist'
@@ -200,13 +200,13 @@ Route::group([
                         Route::put('/', 'UnitController@update')
                         ->middleware(['imageNotRequired', 'uniqueName']);
                             
-
+                        // routes for unit positions
                         Route::group([
                             'prefix' => 'positions',
                             'middleware' => 'unitMembers',                          
                         ], function () {
 
-                            // get unit positions
+                            // get all unit positions
                             Route::get('/', 'ExecutiveController@unitExcos');
                             
                             // add unit position
@@ -219,7 +219,7 @@ Route::group([
                         
                         });
                         
-                        
+                        // routes for unit member 
                         Route::group([
                             'prefix' => '/members/{member_id}',
                             'middleware' => 'memberExist'
@@ -257,7 +257,8 @@ Route::group([
             
             });
 
-            // units
+
+            // aggregates
             Route::prefix('aggregates')->group(function () {
                 
                 // create an aggregate
@@ -283,6 +284,26 @@ Route::group([
                         // update a single aggregate
                         Route::put('/', 'AggregateController@update')
                         ->middleware(['imageNotRequired', 'uniqueAggName']);
+
+
+                        // routes for aggregate positions
+                        Route::group([
+                            'prefix' => 'positions',
+                            'middleware' => 'aggregateMembers',                          
+                        ], function () {
+
+                            // get all aggregate positions
+                            Route::get('/', 'ExecutiveController@aggregateExcos');
+                            
+                            // add aggregate position
+                            Route::post('/', 'ExecutiveController@addAggregateExco')
+                            ->middleware(['validatePosition', 'aggregatePosition']);
+
+                            // remove aggregate position
+                            Route::delete('/{positionId}', 'ExecutiveController@removeAggregateExco')
+                            ->middleware('removeAggregatePosition');
+                        
+                        });
 
 
                         Route::prefix('/subs/{subId}')->group(function () {

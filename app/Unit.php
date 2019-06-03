@@ -31,8 +31,7 @@ class Unit extends Model
      */
     public function church()
     {
-        return $this->belongsTo('App\Church')
-        ->withTimestamps();
+        return $this->belongsTo('App\Church');
     }
 
 

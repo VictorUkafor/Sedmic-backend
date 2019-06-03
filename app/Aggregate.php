@@ -17,6 +17,14 @@ class Aggregate extends Model
         return $this->belongsTo('App\Church');
     }
 
+    
+    /**
+     * Get the executives of the aggregate.
+     */
+    public function executives()
+    {
+        return $this->hasMany('App\AggregateExecutive');
+    }
 
     protected $guarded = ['id'];
 
