@@ -19,6 +19,15 @@ class Member extends Model
     }
 
     /**
+     * Get the unit positions of the member.
+     */
+    public function unitPositions()
+    {
+        return $this->hasMany('App\UnitExecutive')
+        ->withTimestamps();
+    }
+
+    /**
      * Get the church that owns the member.
      */
     public function church()

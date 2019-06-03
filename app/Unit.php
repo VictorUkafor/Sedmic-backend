@@ -19,11 +19,20 @@ class Unit extends Model
     }
 
     /**
+     * Get the executives of the unit.
+     */
+    public function executives()
+    {
+        return $this->hasMany('App\UnitExecutive');
+    }
+
+    /**
      * Get the church that owns this unit.
      */
     public function church()
     {
-        return $this->belongsTo('App\Church');
+        return $this->belongsTo('App\Church')
+        ->withTimestamps();
     }
 
 

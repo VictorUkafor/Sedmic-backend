@@ -13,9 +13,15 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
+Route::group([
+    'namespace' => 'API',
+    'prefix' => 'v1'
+], function () {
+
+    // routes that don't need authentication
     Route::prefix('auth')->group(function () {
 
+        // signup routes
         Route::prefix('signup')->group(function () {
             
             // sigup_email_confirmation route
@@ -50,35 +56,39 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
 
     });
 
-
+    // routes requring authentication
     Route::middleware('jwt.auth')->group(function () {
 
         // user admins routes
         Route::group([
-            'middleware' => 'checkDiamond', 'prefix' => 'admins'
+            'prefix' => 'admins',
+            'middleware' => 'checkDiamond'
         ], function () {
             
             // create admin
             Route::post('/', 'UserController@createAdmin')
             ->middleware('validateConfirm');
                 
-            Route::middleware(['findUser', 'myAdmins'])->group(function () {
+            Route::group([
+                'prefix' => '{userId}',
+                'middleware' => ['findUser', 'myAdmins']
+            ], function () {
 
                 Route::middleware('signupSuccess')->group(function () {
                 
                     // activate admin
-                    Route::post('/{userId}/activate', 'UserController@activateAdmin');
+                    Route::post('/activate', 'UserController@activateAdmin');
 
                     // block admin
-                    Route::post('/{userId}/block', 'UserController@blockAdmin');
+                    Route::post('/block', 'UserController@blockAdmin');
                 
                 });
 
                 // remove admin
-                Route::delete('/{userId}/remove', 'UserController@removeAdmin');
+                Route::delete('/remove', 'UserController@removeAdmin');
 
                 // change admin right
-                Route::post('/{userId}/right', 'UserController@changeRight');
+                Route::post('/right', 'UserController@changeRight');
             
             });
         });
@@ -142,17 +152,20 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 ->middleware('membersExist');
                 
                 
-                Route::middleware('memberExist')->group(function () {
+                Route::group([
+                    'prefix' => '{member_id}',
+                    'middleware' => 'memberExist'
+                ], function () {
                     
                     // view member
-                    Route::get('/{member_id}', 'MemberController@show');
+                    Route::get('/', 'MemberController@show');
 
                     // update member
-                    Route::put('/{member_id}', 'MemberController@update')
+                    Route::put('/', 'MemberController@update')
                     ->middleware('canUpdate');
 
                     // update member
-                    Route::delete('/{member_id}', 'MemberController@delete')
+                    Route::delete('/', 'MemberController@delete')
                     ->middleware('canDelete');
                 
                 });
@@ -173,29 +186,54 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 ->middleware('unitsExist');
                 
                 
-                Route::middleware('unitExist')->group(function () {
+                Route::group([
+                    'prefix' => '{unit_id}',
+                    'middleware' => 'unitExist'
+                ], function () {
                     
                     Route::middleware('unitHandlers')->group(function () {
                         
                         // view a single unit
-                        Route::get('/{unit_id}', 'UnitController@show');
-
+                        Route::get('/', 'UnitController@show');
+                            
                         // update a single unit
-                        Route::put('/{unit_id}', 'UnitController@update')
+                        Route::put('/', 'UnitController@update')
                         ->middleware(['imageNotRequired', 'uniqueName']);
+                            
 
-                        Route::middleware('memberExist')->group(function () {
+                        Route::group([
+                            'prefix' => 'positions',
+                            'middleware' => 'unitMembers',                          
+                        ], function () {
+
+                            // get unit positions
+                            Route::get('/', 'ExecutiveController@unitExcos');
+                            
+                            // add unit position
+                            Route::post('/', 'ExecutiveController@addUnitExco')
+                            ->middleware(['validatePosition', 'unitPosition']);
+
+                            // remove unit position
+                            Route::delete('/{positionId}', 'ExecutiveController@removeUnitExco')
+                            ->middleware('removeUnitPosition');
+                        
+                        });
+                        
+                        
+                        Route::group([
+                            'prefix' => '/members/{member_id}',
+                            'middleware' => 'memberExist'
+                        ], function () {
                             
                             // add member to unit
-                            Route::post('/{unit_id}/members/{member_id}', 
-                            'UnitMemberController@addMember')->middleware('isMember');
+                            Route::post('/', 'UnitMemberController@addMember')
+                            ->middleware('isMember');
 
                             // remove member from unit
-                            Route::delete('/{unit_id}/members/{member_id}', 
-                            'UnitMemberController@removeMember')->middleware('notMember');
-
+                            Route::delete('/', 'UnitMemberController@removeMember')
+                            ->middleware('notMember');
+                        
                         });
-
                     
                     });
                     
@@ -203,15 +241,15 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                     Route::middleware('diamondOrGold')->group(function () {
                         
                         // adds an handler
-                        Route::post('/{unit_id}/add-handlers', 'UnitController@addHandlers')
+                        Route::post('/add-handlers', 'UnitController@addHandlers')
                         ->middleware('addUnitHandlers');
 
                         // removes an handler
-                        Route::post('/{unit_id}/remove-handler/{handler}', 
+                        Route::post('/remove-handler/{handler}', 
                         'UnitController@removeHandler');
 
                         // deletes a unit
-                        Route::delete('/{unit_id}', 'UnitController@delete');
+                        Route::delete('/', 'UnitController@delete');
                     
                     });
                 
@@ -232,24 +270,32 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                 ->middleware('aggregatesExist');
                 
                 
-                Route::middleware('aggregateExist')->group(function () {
+                Route::group([
+                    'prefix' => '{aggregate_id}',
+                    'middleware' => 'aggregateExist'
+                ], function () {
                     
                     Route::middleware('aggregateHandlers')->group(function () {
                         
                         // view a single aggregate
-                        Route::get('/{aggregate_id}', 'AggregateController@show');
+                        Route::get('/', 'AggregateController@show');
 
                         // update a single aggregate
-                        Route::put('/{aggregate_id}', 'AggregateController@update')
+                        Route::put('/', 'AggregateController@update')
                         ->middleware(['imageNotRequired', 'uniqueAggName']);
 
-                        // add sub to aggregate
-                        Route::post('/{aggregate_id}/subs/{subId}', 'SubController@addSub')
-                        ->middleware('freeSub');
 
-                        // remove sub to aggregate
-                        Route::delete('/{aggregate_id}/subs/{subId}', 'SubController@removeSub')
-                        ->middleware('subNotYours');
+                        Route::prefix('/subs/{subId}')->group(function () {
+                            
+                            // add sub to aggregate
+                            Route::post('/', 'SubController@addSub')
+                            ->middleware('freeSub');
+
+                            // remove sub to aggregate
+                            Route::delete('/', 'SubController@removeSub')
+                           ->middleware('subNotYours');
+
+                        });
                     
                     });
                     
@@ -257,18 +303,18 @@ Route::group(['namespace' => 'API','prefix' => 'v1'], function () {
                     Route::middleware('diamondOrGold')->group(function () {
                         
                         // adds an handler
-                        Route::post('/{aggregate_id}/add-handlers', 'AggregateController@addHandlers')
+                        Route::post('/add-handlers', 'AggregateController@addHandlers')
                         ->middleware('addAggregateHandlers');
 
                         // removes an handler
-                        Route::post('/{aggregate_id}/remove-handler/{handler}', 
+                        Route::post('/remove-handler/{handler}', 
                         'AggregateController@removeHandler');
 
                         // deletes a unit
-                        Route::delete('/{aggregate_id}', 'AggregateController@delete');
+                        Route::delete('/', 'AggregateController@delete');
 
                         // upgrade an aggregate
-                        Route::put('/{aggregate_id}/upgrade', 'AggregateController@upgrade')
+                        Route::put('/upgrade', 'AggregateController@upgrade')
                         ->middleware(['validateUpgrade', 'upgradeAggregate', 'noSubs']);
                     
                     });
