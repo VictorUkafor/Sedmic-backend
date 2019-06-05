@@ -344,6 +344,47 @@ Route::group([
             
             });
 
+
+            // income routes
+            Route::prefix('incomes')->group(function () {
+
+                // income types routes
+                Route::group([
+                    'prefix' => 'types',
+                    'middleware' => 'diamondOrGold'
+                ], function () {
+                    
+                    // create income type
+                    Route::post('/', 'IncomeTypeController@create')
+                    ->middleware('validateIncomeType');
+
+                    // view all income types
+                    Route::get('/', 'IncomeTypeController@viewAll');
+                    
+                    // routes for a single income type
+                    Route::group([
+                        'prefix' => '{incomeTypeId}',
+                        'middleware' => 'incomeTypeExist'
+                    ], function () {
+                        
+                        // update income type
+                        Route::put('/', 'IncomeTypeController@update')
+                        ->middleware(['incomeTypeName' ]);
+
+                        // delete income type
+                        Route::get('/', 'IncomeTypeController@show');
+
+                        // delete income type
+                        Route::delete('/', 'IncomeTypeController@delete');
+
+                    });                 
+
+
+
+                });
+
+            });
+
         
         });
     

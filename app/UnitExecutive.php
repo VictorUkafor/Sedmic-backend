@@ -2,10 +2,14 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class UnitExecutive extends Model
 {
+
+    use SoftDeletes;
+
     protected $guarded = ['id'];
 
     /**
