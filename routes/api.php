@@ -346,13 +346,39 @@ Route::group([
 
 
             // income routes
-            Route::prefix('incomes')->group(function () {
+            Route::group([
+                'prefix' => 'incomes',
+                'middleware' => 'diamondOrGold'
+            ], function () {
+
+                // create income 
+                Route::post('/', 'IncomeController@create')
+                ->middleware('validateIncome'); 
+
+                // all income 
+                Route::get('/', 'IncomeController@viewAll'); 
+
+
+                // routes for single income
+                Route::group([
+                    'prefix' => '{incomeId}',
+                    'middleware' => 'incomeExist',
+                ], function () {
+                    
+                    // update income
+                    Route::put('/', 'IncomeController@update');
+
+                    // update income
+                    Route::get('/', 'IncomeController@show');
+
+                    // delete income
+                    Route::delete('/', 'IncomeController@delete');
+
+                });
+
 
                 // income types routes
-                Route::group([
-                    'prefix' => 'types',
-                    'middleware' => 'diamondOrGold'
-                ], function () {
+                Route::prefix('types')->group(function () {
                     
                     // create income type
                     Route::post('/', 'IncomeTypeController@create')
@@ -360,6 +386,7 @@ Route::group([
 
                     // view all income types
                     Route::get('/', 'IncomeTypeController@viewAll');
+
                     
                     // routes for a single income type
                     Route::group([
