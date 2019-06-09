@@ -183,6 +183,9 @@ return [
         // Tymon\JWTAuth
         Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
 
+        // therealsmat\Ebulksms
+        therealsmat\Ebulksms\EbulkSmsServiceProvider::class,
+
     ],
 
     /*

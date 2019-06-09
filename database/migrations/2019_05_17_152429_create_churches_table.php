@@ -22,6 +22,7 @@ class CreateChurchesTable extends Migration
             $table->string('images')->nullable();
             $table->string('contact_numbers')->nullable();
             $table->string('official_email')->nullable();
+            $table->string('sms_sender_name')->nullable();
             $table->timestamps();
         });
     }

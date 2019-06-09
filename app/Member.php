@@ -2,12 +2,13 @@
 
 namespace App;
 
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Member extends Model
 {
-    use SoftDeletes;
+    use Notifiable, SoftDeletes;
 
     /**
      * Get the units of the member.
@@ -40,6 +41,15 @@ class Member extends Model
     public function church()
     {
         return $this->belongsTo('App\Church');
+    }
+
+
+    /**
+     * Get the souls of the member.
+     */
+    public function souls()
+    {
+        return $this->hasMany('App\FirstTimer', 'invited_by');
     }
 
 

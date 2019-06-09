@@ -412,6 +412,135 @@ Route::group([
 
             });
 
+
+            // first timer routes
+            Route::prefix('firsttimers')->group(function () {
+
+                // create first timer 
+                Route::post('/', 'FirstTimerController@create')
+                ->middleware('validateFirstTimer'); 
+
+                // all first timers 
+                Route::get('/', 'FirstTimerController@viewAll'); 
+
+
+                // routes for single first timer
+                Route::group([
+                    'prefix' => '{firstTimerId}',
+                    'middleware' => 'firstTimerExist',
+                ], function () {
+                    
+                    // update first timer
+                    Route::put('/', 'FirstTimerController@update')
+                    ->middleware('imageNotRequired'); 
+
+                    // update first timer
+                    Route::get('/', 'FirstTimerController@show');
+
+                    // delete first timer
+                    Route::delete('/', 'FirstTimerController@delete');
+
+                });
+
+            });
+
+
+            // slip routes
+            Route::prefix('slips')->group(function () {
+
+                // create slip 
+                Route::post('/', 'SlipController@create')
+                ->middleware('validateSlip'); 
+
+                // all slips 
+                Route::get('/', 'SlipController@viewAll'); 
+
+
+                // routes for single slip
+                Route::group([
+                    'prefix' => '{slipId}',
+                    'middleware' => 'slipExist',
+                ], function () {
+                    
+                    // update slip
+                    Route::put('/', 'SlipController@update')
+                    ->middleware('imageNotRequired'); 
+
+                    // update slip
+                    Route::get('/', 'SlipController@show'); 
+
+                    // delete slip
+                    Route::delete('/', 'SlipController@delete');
+
+                });
+
+            });
+
+
+            // programme routes
+            Route::prefix('programmes')->group(function () {                    
+                
+                // create programme
+                Route::post('/', 'ProgrammeController@create')
+                ->middleware('validateProgramme');
+ 
+                // view all programmes
+                Route::get('/', 'ProgrammeController@viewAll'); 
+                
+                // routes for single programme
+                Route::group([
+                    'prefix' => '{programmeId}',
+                    'middleware' => 'programmeExist',
+                ], function () {
+                    
+                    // view a programme
+                    Route::get('/', 'ProgrammeController@show');
+
+                    // routes for programme creator
+                    Route::middleware('programmeCreator')->group(function () {                        
+                        
+                        // update programme
+                        Route::put('/', 'ProgrammeController@update')
+                        ->middleware('editProgramme');
+
+                        // delete programme
+                        Route::delete('/', 'ProgrammeController@delete');
+
+                        // program handler routes
+                        Route::prefix('handlers')->group(function () {
+                            
+                            // get programme handlers
+                            Route::get('/', 'ProgrammeController@getHandlers');
+
+                            // add programme handlers
+                            Route::post('/', 'ProgrammeController@addHandlers')
+                            ->middleware('addHandlers');
+
+                            // remove programme handler
+                            Route::delete('/{userId}', 'ProgrammeController@removeHandler')
+                            ->middleware('programmeHandlerExist');
+
+                        });
+
+                    });
+
+                    Route::middleware('programmeHandlers')->group(function () {                        
+                        
+                        // // update programme
+                        // Route::put('/', 'ProgrammeController@update')
+                        // ->middleware('editProgramme');
+
+                        // // delete program
+                        // Route::delete('/', 'ProgrammeController@delete');
+
+                    });
+
+
+                });
+
+
+            });
+
         
         });
     

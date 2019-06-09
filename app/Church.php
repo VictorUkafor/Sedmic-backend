@@ -17,6 +17,14 @@ class Church extends Model
 
 
     /**
+     * Get the first timers of the church.
+     */
+    public function firstTimers()
+    {
+        return $this->hasMany('App\FirstTimer');
+    }
+
+    /**
      * Get the units of the church.
      */
     public function units()
@@ -33,6 +41,16 @@ class Church extends Model
         return $this->hasMany('App\Aggregate');
     }
 
+
+    /**
+     * Get the programme of the church.
+     */
+    public function Programmes()
+    {
+        return $this->hasMany('App\Programme', 'church_id');
+    }
+
+    
     protected $guarded = ['id'];
 
     
@@ -44,6 +62,7 @@ class Church extends Model
         'images',
         'minister_in_charge',
         'contact_numbers',
+        'sms_sender_name'
     ];
 
 }

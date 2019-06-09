@@ -28,7 +28,7 @@ class IncomeController extends Controller
         if($income->save()) {
             return response()->json([
                 'successMessage' => 'Income created successfully',
-                'incomeType' => $income
+                'income' => $income
             ], 201);
         }
 
@@ -76,7 +76,7 @@ class IncomeController extends Controller
         if($income->save()) {
             return response()->json([
                 'successMessage' => 'Income updated successfully',
-                'incomeType' => $income
+                'income' => $income
             ], 201);
         }
 
@@ -93,7 +93,7 @@ class IncomeController extends Controller
 
         if($income) {
             return response()->json([
-                'incomeType' => $income
+                'income' => $income
             ], 200);
         }
 
@@ -149,7 +149,6 @@ class IncomeController extends Controller
         ], 500);
 
     }
-
 
 
 }

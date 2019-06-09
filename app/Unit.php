@@ -14,8 +14,7 @@ class Unit extends Model
      */
     public function members()
     {
-        return $this->belongsToMany('App\Member')
-        ->withTimestamps();
+        return $this->belongsToMany('App\Member');
     }
 
     /**
