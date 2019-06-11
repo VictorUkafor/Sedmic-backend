@@ -40,7 +40,7 @@ class ConfirmEmail extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = url('/api/v1/auth/signup/confirm/'.$notifiable->activation_token);
+        $url = url('/api/v1/auth/confirm-email/'.$notifiable->activation_token);
 
         return (new MailMessage)
             ->subject('Please confirm your account')

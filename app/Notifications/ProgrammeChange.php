@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -46,12 +47,15 @@ class ProgrammeChange extends Notification
     {
         $emailContent = '';
 
+        $contact = $this->organizer->phone ? 
+        $this->organizer->phone : $this->organizer->email;
+
         if(!$this->programme->message){
-            $emailContent = 'This is to notify you of the following changes. '
-            .$this->programme->title.'('.$this->church->name_of_church.') will now hold on '
-            .$this->programme->date.' at '.$this->programme->venue.' by '.$this->programme->time_starting.
-            'You may reachout to '.$this->organizer->first_name.' '.$this->organizer->last_name.', '
-            .$this->organizer->phone.' for more info.';
+            $emailContent = 'This is to notify you of the following changes. '.
+            $this->programme->title.' ('.$this->church->name_of_church.') will now hold on '.
+            $this->programme->date.' at '.$this->programme->venue.' by '.
+            $this->programme->time_starting.'. You may reachout to '.
+            $this->organizer->full_name.', '.$contact.' for more info.';
         }
 
         $emailContent = $this->programme->message;

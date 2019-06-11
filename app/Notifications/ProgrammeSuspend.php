@@ -46,11 +46,14 @@ class ProgrammeSuspend extends Notification
     {
         $emailContent = '';
 
+        $contact = $this->organizer->phone ? 
+        $this->organizer->phone : $this->organizer->email;
+
         if(!$this->programme->message){
             $emailContent = 'This is to notify you that the programme '.
-            $this->programme->title.'('.$this->request->church->name_of_church.
+            $this->programme->title.' ('.$this->request->church->name_of_church.
             ') has been suspended till further notice. You may reachout to '.
-            $this->organizer->first_name.' '.$this->organizer->last_name.', '.$this->organizer->phone.
+            $this->organizer->full_name.', '.$contact.
             ' for more info. Sorry for any inconviences.';
         }
 

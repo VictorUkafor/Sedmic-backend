@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -46,11 +47,15 @@ class ProgrammeInvitation extends Notification
     {
         $emailContent = '';
 
+        $contact = $this->organizer->phone ? 
+        $this->organizer->phone : $this->organizer->email;
+
         if(!$this->programme->message){
-            $emailContent = 'You\'ve been invited to attend '.$this->programme->title.'('.$this->church->name_of_church.') taking place at '
-            .$this->programme->venue.' on '.$this->programme->date.' by '.$this->programme->time_starting.
-            ' You can reachout to '.$this->organizer->first_name.' '.$this->organizer->last_name.', '.
-            $this->organizer->phone.' for more info.';
+            $emailContent = 'You\'ve been invited to attend '.$this->programme->title.
+            ' ('.$this->church->name_of_church.') taking place at '.
+            $this->programme->venue.' on '.$this->programme->date.' by '.
+            $this->programme->time_starting.'. You can reachout to '.
+            $this->organizer->full_name.', '.$contact.' for more info.';
         }
 
         $emailContent = $this->programme->message;

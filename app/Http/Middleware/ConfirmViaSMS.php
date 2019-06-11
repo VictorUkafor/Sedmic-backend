@@ -2,11 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use App\Programme;
 use Closure;
 use Validator;
 
-class EditProgramme
+class ConfirmViaSMS
 {
     /**
      * Handle an incoming request.
@@ -17,10 +16,14 @@ class EditProgramme
      */
     public function handle($request, Closure $next)
     {
-        $programme = $request->programme;
-
         $validator = Validator::make($request->all(), [
-            'date' => 'required|date',
+            'verification_code' => 'required',
+            'full_name' => 'required',
+            'email' => 'email|required',
+            'image' => 'image',
+            'date_of_birth' => 'date',
+            'password' => 'required|min:7|alpha_num|confirmed',
+            'password_confirmation' => 'required|same:password',
         ]);
 
         if ($validator->fails()) {
@@ -28,21 +31,8 @@ class EditProgramme
             return response()->json([
                 'errors' => $errors
             ], 400);
-        } 
-
-
-        $findProgramme = Programme::where([
-            'church_id' => $request->church->id,
-            'title' => $request->title
-        ])->first();
-
-        if ($findProgramme && $findProgramme->title != $programme->title){
-            return response()->json([
-                'errorMessage' => 'Programme exist already'
-            ], 400);
         }
 
         return $next($request);
-
     }
 }

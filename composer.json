@@ -18,7 +18,8 @@
         "laravel/tinker": "~1.0",
         "nesbot/carbon": "~1.0",
         "therealsmat/laravel-ebulksms": "^1.0",
-        "tymon/jwt-auth": "^0.5.12"
+        "tymon/jwt-auth": "^0.5.12",
+        "simplesoftwareio/simple-qrcode": "~2"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

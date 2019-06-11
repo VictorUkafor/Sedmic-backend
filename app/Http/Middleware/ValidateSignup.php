@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateConfirm
+class ValidateSignup
 {
     /**
      * Handle an incoming request.
@@ -18,7 +18,7 @@ class ValidateConfirm
     {
         $validator = Validator::make($request->all(), [
             'username' => ['required', 'min:7', 'unique:users,username', 'regex:/^\S*$/u'],
-            'email' => 'required|email',
+            'email' => 'email',
         ]);
 
         if ($validator->fails()) {
@@ -26,6 +26,12 @@ class ValidateConfirm
             return response()->json([
                 'errors' => $errors
             ], 400);
+        }
+
+        if(!$request->email && !$request->phone){
+            return response()->json([
+                'errorMessage' => 'Email or Phone number must be provided'
+            ], 400);  
         }
 
         return $next($request);

@@ -48,11 +48,13 @@ class ProgrammeHandler extends Notification
 
         $emailContent = '';
 
+        $contact = $this->organizer->phone ? 
+        $this->organizer->phone : $this->organizer->email;
+
         if(!$this->programme->message){
             $emailContent = 'This is to notify you that you are now an handler to the programme '.
-            $this->$programme->title.'('.$this->request->church->name_of_church.'). You may reachout to '.
-            $this->organizer->first_name.' '.$this->organizer->last_name.', '.$this->organizer->phone.
-            ' for more info.';
+            $this->$programme->title.' ('.$this->request->church->name_of_church.'). You may reachout to '.
+            $this->organizer->full_name.', '.$contact.' for more info.';
         }
 
         $emailContent = $this->programme->message;

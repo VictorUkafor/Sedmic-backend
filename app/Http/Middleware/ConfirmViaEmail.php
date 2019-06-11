@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateActivate
+class ConfirmViaEmail
 {
     /**
      * Handle an incoming request.
@@ -18,6 +18,7 @@ class ValidateActivate
     {
         $validator = Validator::make($request->all(), [
             'full_name' => 'required',
+            'phone' => 'required',
             'image' => 'image',
             'date_of_birth' => 'date',
             'password' => 'required|min:7|alpha_num|confirmed',

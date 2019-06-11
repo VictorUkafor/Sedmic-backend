@@ -74,9 +74,12 @@ class ProgrammeController extends Controller
                         'user_id' => $id
                     ])->first();
 
+                    if($user){
+
+                    }
+
                     $message = $request->message ? $request->message : 
-                    'Hi '.$user->first_name.' '.$user->last_name.
-                    '. This is to notify you that you are now an handler to the programme '.
+                    'Hi There! This is to notify you that you are now an handler to the programme '.
                     $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
                     $organizer->full_name.', '.$organizer->phone ? $organizer->phone : $organizer->email.
                     ' for more info. God bless you';
@@ -92,27 +95,30 @@ class ProgrammeController extends Controller
                     }
 
                     if($user && $user->phone){
-                        // $sms->fromSender($smsSender)
-                        // ->composeMessage($message)
-                        // ->addRecipients($user->phone)
-                        // ->send();                   
+                        $sms->fromSender($smsSender)
+                        ->composeMessage($message)
+                        ->addRecipients($user->phone)
+                        ->send();                   
                     }
 
                     if($user && $user->email){
                         $mail['user'] = $user;
-                        //$user->notify(new ProgrammeHandler($mail));                  
+                        $user->notify(new ProgrammeHandler($mail));                  
                     }
 
                 }
             }
 
+           
+            $contact = $organizer->phone ? 
+            $organizer->phone : $organizer->email;
 
             $message = $request->message ? $request->message : 
-            'Hi There! You\'ve been invited to attend '
-            .$programme->title.'('.$request->church->name_of_church.') taking place at '
-            .$programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
+            'Hi There! You\'ve been invited to attend '.
+            $programme->title.'('.$request->church->name_of_church.') taking place at '.
+            $programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
             '. We\'ll be expecting you. You may reachout to '.$organizer->full_name.', '.
-            $organizer->phone ? $organizer->phone : $organizer->email.' for more info.  God bless you!';
+            $contact.' for more info.  God bless you!';
 
             $programme->message = $message;
 
@@ -135,14 +141,14 @@ class ProgrammeController extends Controller
 
                                 if($programme->email_notification && $member->email){
                                     $mail['user'] = $member;
-                                    //$member->notify(new ProgrammeInvitation($mail);
+                                    $member->notify(new ProgrammeInvitation($mail));
                                 }
 
                                 if($programme->sms_notification && $member->phone){
-                                   // $sms->fromSender($smsSender)
-                                   // ->composeMessage($message)
-                                   // ->addRecipients($member->phone)
-                                   // ->send();
+                                   $sms->fromSender($smsSender)
+                                   ->composeMessage($message)
+                                   ->addRecipients($member->phone)
+                                   ->send();
                                 }
                         
                         
@@ -174,14 +180,14 @@ class ProgrammeController extends Controller
 
                             if($programme->email_notification && $slip->email){
                                 $mail['user'] = $slip;
-                                //$slip->notify(new ProgrammeInvitation($mail);
+                                $slip->notify(new ProgrammeInvitation($mail));
                             }
 
                             if($programme->sms_notification && $slip->phone){
-                               // $sms->fromSender($smsSender)
-                               // ->composeMessage($message)
-                               // ->addRecipients($slip->phone)
-                               // ->send();
+                               $sms->fromSender($smsSender)
+                               ->composeMessage($message)
+                               ->addRecipients($slip->phone)
+                               ->send();
                             }
                         
                         
@@ -213,14 +219,14 @@ class ProgrammeController extends Controller
 
                             if($programme->email_notification && $firstTimer->email){
                                 $mail['user'] = $firstTimer;
-                                //$firstTimer->notify(new ProgrammeInvitation($mail);
+                                $firstTimer->notify(new ProgrammeInvitation($mail));
                             }
 
                             if($programme->sms_notification && $firstTimer->phone){
-                               // $sms->fromSender($smsSender)
-                               // ->composeMessage($message)
-                               // ->addRecipients($firstTimer->phone)
-                               // ->send();
+                               $sms->fromSender($smsSender)
+                               ->composeMessage($message)
+                               ->addRecipients($firstTimer->phone)
+                               ->send();
                             }
                         
                         
@@ -300,12 +306,14 @@ class ProgrammeController extends Controller
                 $smsSender = $request->church->sms_sender_name ? 
                 $request->church->sms_sender_name : 'Sedmic';
 
+                $contact = $organizer->phone ? 
+                $organizer->phone : $organizer->email; 
+
                 $message = $request->message ? $request->message : 
                 'Hi There! This is to notify you of the following changes. '
                 .$programme->title.'('.$request->church->name_of_church.') will now hold on '
                 .$programme->date.' at '.$programme->venue.' by '.$programme->time_starting.
-                'You may reachout to '.$organizer->full_name.', '.$organizer->phone ? 
-                $organizer->phone : $organizer->email.
+                'You may reachout to '.$organizer->full_name.', '.$contact.
                 ' for more info. Sorry for any inconviences. God bless you';
 
                 $mail = [];
@@ -319,15 +327,15 @@ class ProgrammeController extends Controller
     
                         $user = User::find($id);
                         if($user && $user->phone){
-                            // $sms->fromSender($smsSender)
-                            // ->composeMessage($message)
-                            // ->addRecipients($user->phone)
-                            // ->send();                   
+                            $sms->fromSender($smsSender)
+                            ->composeMessage($message)
+                            ->addRecipients($user->phone)
+                            ->send();                   
                         }
     
                         if($user && $user->email){
                             $mail['user'] = $user;
-                            //$user->notify(new ProgrammeChange($mail));                  
+                            $user->notify(new ProgrammeChange($mail));                  
                         }
     
                     }
@@ -341,19 +349,19 @@ class ProgrammeController extends Controller
                                 if($invitee->member_id && Member::find($invitee->member_id)){
                                     $member = Member::find($invitee->member_id);
                                     $mail['user'] = $member;
-                                    //$member->notify(new ProgrammeChange($mail));
+                                    $member->notify(new ProgrammeChange($mail));
                                 }
 
                                 if($invitee->slip_id && Slip::find($invitee->slip_id)){
                                     $slip = Slip::find($invitee->slip_id);
                                     $mail['user'] = $slip;
-                                    //$slip->notify(new ProgrammeChange($mail));
+                                    $slip->notify(new ProgrammeChange($mail));
                                 }
 
                                 if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
                                     $firstTimer = FirstTimer::find($invitee->first_timer_id);
                                     $mail['user'] = $firstTimer;
-                                    //$firstTimer->notify(new ProgrammeChange($mail));
+                                    $firstTimer->notify(new ProgrammeChange($mail));
                                 }
                             
                             }
@@ -364,10 +372,10 @@ class ProgrammeController extends Controller
                                 if($invitee->slip_id && Slip::find($invitee->slip_id)){
                                     $slip = Slip::find($invitee->slip_id);                                    
                                     if($slip->phone){
-                                        // $sms->fromSender($smsSender)
-                                        // ->composeMessage($message)
-                                        // ->addRecipients($slip->phone)
-                                        // ->send();
+                                        $sms->fromSender($smsSender)
+                                        ->composeMessage($message)
+                                        ->addRecipients($slip->phone)
+                                        ->send();
                                     }
 
                                 }
@@ -375,10 +383,10 @@ class ProgrammeController extends Controller
                                 if($invitee->member_id && Member::find($invitee->member_id)){
                                     $member = Member::find($invitee->member_id);                                    
                                     if($member->phone){
-                                        // $sms->fromSender($smsSender)
-                                        // ->composeMessage($message)
-                                        // ->addRecipients($member->phone)
-                                        // ->send();
+                                        $sms->fromSender($smsSender)
+                                        ->composeMessage($message)
+                                        ->addRecipients($member->phone)
+                                        ->send();
                                     }
 
                                 }
@@ -386,10 +394,10 @@ class ProgrammeController extends Controller
                                 if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
                                     $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
                                     if($firstTimer->phone){
-                                        // $sms->fromSender($smsSender)
-                                        // ->composeMessage($message)
-                                        // ->addRecipients($firstTimer->phone)
-                                        // ->send();
+                                        $sms->fromSender($smsSender)
+                                        ->composeMessage($message)
+                                        ->addRecipients($firstTimer->phone)
+                                        ->send();
                                     }
 
                                 }
@@ -472,8 +480,8 @@ class ProgrammeController extends Controller
         if($programme && $deleteProgramme) {
             $organizer = User::find($programme->created_by);
 
-            $handlers = Handler::where('programme_id', $programmeId)->get();
-            $handlersId = Handler::where('programme_id', $programmeId)->pluck('id');
+            $handlers = Handler::where('programme_id', $programmeId)->pluck('user_id');
+            $handlerIds = Handler::where('programme_id', $programmeId)->pluck('id');
 
             $invitees = Invitee::where('programme_id', $programmeId)->get();
             $inviteesId = Invitee::where('programme_id', $programmeId)->pluck('id');
@@ -481,11 +489,13 @@ class ProgrammeController extends Controller
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
 
+            $contact = $organizer->phone ? 
+            $organizer->phone : $organizer->email;
+
             $message = $request->message ? $request->message :
             'Hi there! This is to notify you that the programme '.
             $programme->title.'('.$request->church->name_of_church.') has been cancelled. '.
-            'You may reachout to '.$organizer->full_name.', '.$organizer->phone ?
-            $organizer->phone : $organizer->email.
+            'You may reachout to '.$organizer->full_name.', '.$contact.
             ' for more info. Sorry for any inconviences. God bless you';
 
             $programme->message = $message;
@@ -500,15 +510,15 @@ class ProgrammeController extends Controller
 
                     $user = User::find($id);
                     if($user && $user->phone){
-                        // $sms->fromSender($smsSender)
-                        // ->composeMessage($message)
-                        // ->addRecipients($user->phone)
-                        // ->send();                   
+                        $sms->fromSender($smsSender)
+                        ->composeMessage($message)
+                        ->addRecipients($user->phone)
+                        ->send();                   
                     }
 
                     if($user && $user->email){
                         $mail['user'] = $user;
-                        //$user->notify(new ProgrammeCancel($mail));                  
+                        $user->notify(new ProgrammeCancel($mail));                  
                     }
 
                 }
@@ -521,19 +531,19 @@ class ProgrammeController extends Controller
                         if($invitee->member_id && Member::find($invitee->member_id)){
                             $member = Member::find($invitee->member_id);
                             $mail['user'] = $member;
-                            //$member->notify(new ProgrammeCancel($mail));
+                            $member->notify(new ProgrammeCancel($mail));
                         }
 
                         if($invitee->slip_id && Slip::find($invitee->slip_id)){
                             $slip = Slip::find($invitee->slip_id);
                             $mail['user'] = $slip;
-                            //$slip->notify(new ProgrammeCancel($mail));
+                            $slip->notify(new ProgrammeCancel($mail));
                         }
 
                         if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
                             $firstTimer = FirstTimer::find($invitee->first_timer_id);
                             $mail['user'] = $firstTimer;
-                            //$firstTimer->notify(new ProgrammeCancel($mail));
+                            $firstTimer->notify(new ProgrammeCancel($mail));
                         }
                     
                     }
@@ -544,10 +554,10 @@ class ProgrammeController extends Controller
                         if($invitee->slip_id && Slip::find($invitee->slip_id)){
                             $slip = Slip::find($invitee->slip_id);                                    
                             if($slip->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($slip->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($slip->phone)
+                                ->send();
                             }
 
                         }
@@ -555,10 +565,10 @@ class ProgrammeController extends Controller
                         if($invitee->member_id && Member::find($invitee->member_id)){
                             $member = Member::find($invitee->member_id);                                    
                             if($member->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($member->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($member->phone)
+                                ->send();
                             }
 
                         }
@@ -566,10 +576,10 @@ class ProgrammeController extends Controller
                         if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
                             $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
                             if($firstTimer->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($firstTimer->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($firstTimer->phone)
+                                ->send();
                             }
 
                         }
@@ -581,7 +591,7 @@ class ProgrammeController extends Controller
             }
 
 
-            Handler::destroy($handlersId->toArray());
+            Handler::destroy($handlerIds->toArray());
             Invitee::destroy($inviteesId->toArray());
 
 
@@ -607,22 +617,22 @@ class ProgrammeController extends Controller
 
         if($programme) {
             $organizer = User::find($programme->created_by);
-
-            $handlers = Handler::where('programme_id', $programme->id)->get();
-            $handlersId = Handler::where('programme_id', $programme->id)->pluck('id');
+            $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
 
             $invitees = Invitee::where('programme_id', $programme->id)->get();
             $inviteesId = Invitee::where('programme_id', $programme->id)->pluck('id');
 
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
+
+            $contact = $organizer->phone ? 
+            $organizer->phone : $organizer->email;
             
             $message = $request->message ? $request->message :
             'Hi There! This is to notify you that the programme '.
             $programme->title.'('.$request->church->name_of_church.
             ') has been suspended till further notice. You may reachout to '.
-            $organizer->full_name.', '.$organizer->phone ? 
-            $organizer->phone : $organizer->email.
+            $organizer->full_name.', '.$contact.
             ' for more info. Sorry for any inconviences. God bless you';
 
             $mail = [];
@@ -637,15 +647,15 @@ class ProgrammeController extends Controller
 
                     $user = User::find($id);
                     if($user && $user->phone){
-                        // $sms->fromSender($smsSender)
-                        // ->composeMessage($message)
-                        // ->addRecipients($user->phone)
-                        // ->send();                   
+                        $sms->fromSender($smsSender)
+                        ->composeMessage($message)
+                        ->addRecipients($user->phone)
+                        ->send();                   
                     }
 
                     if($user && $user->email){
                         $mail['user'] = $user;
-                        //$user->notify(new ProgrammeSuspend($mail));                  
+                        $user->notify(new ProgrammeSuspend($mail));                  
                     }
 
                 }
@@ -660,19 +670,19 @@ class ProgrammeController extends Controller
                         if($invitee->member_id && Member::find($invitee->member_id)){
                             $member = Member::find($invitee->member_id);
                             $mail['user'] = $member;
-                            //$member->notify(new ProgrammeSuspend($mail));
+                            $member->notify(new ProgrammeSuspend($mail));
                         }
 
                         if($invitee->slip_id && Slip::find($invitee->slip_id)){
                             $slip = Slip::find($invitee->slip_id);
                             $mail['user'] = $slip;
-                            //$slip->notify(new ProgrammeSuspend($mail));
+                            $slip->notify(new ProgrammeSuspend($mail));
                         }
 
                         if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
                             $firstTimer = FirstTimer::find($invitee->first_timer_id);
                             $mail['user'] = $firstTimer;
-                            //$firstTimer->notify(new ProgrammeSuspend($mail));
+                            $firstTimer->notify(new ProgrammeSuspend($mail));
                         }
                     
                     }
@@ -683,10 +693,10 @@ class ProgrammeController extends Controller
                         if($invitee->slip_id && Slip::find($invitee->slip_id)){
                             $slip = Slip::find($invitee->slip_id);                                    
                             if($slip->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($slip->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($slip->phone)
+                                ->send();
                             }
 
                         }
@@ -694,10 +704,10 @@ class ProgrammeController extends Controller
                         if($invitee->member_id && Member::find($invitee->member_id)){
                             $member = Member::find($invitee->member_id);                                    
                             if($member->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($member->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($member->phone)
+                                ->send();
                             }
 
                         }
@@ -705,10 +715,10 @@ class ProgrammeController extends Controller
                         if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
                             $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
                             if($firstTimer->phone){
-                                // $sms->fromSender($smsSender)
-                                // ->composeMessage($message)
-                                // ->addRecipients($firstTimer->phone)
-                                // ->send();
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($firstTimer->phone)
+                                ->send();
                             }
 
                         }
@@ -780,17 +790,19 @@ class ProgrammeController extends Controller
                 $smsSender = $request->church->sms_sender_name ? 
                 $request->church->sms_sender_name : 'Sedmic';
 
+                $contact = $organizer->phone ? 
+                $organizer->phone : $organizer->email;
+
                 $message = 'Hi '.$user->first_name.' '.$user->last_name.
                 '. This is to notify you that you are now an handler to the programme '.
                 $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
-                $organizer->full_name.', '.$organizer->phone ? $organizer->phone :
-                $organizer->email.' for more info. God bless you';
+                $organizer->full_name.', '.$contact.' for more info. God bless you';
 
                 if($user && $user->phone){
-                    // $sms->fromSender($smsSender)
-                    // ->composeMessage($message)
-                    // ->addRecipients($user->phone)
-                    // ->send();                   
+                    $sms->fromSender($smsSender)
+                    ->composeMessage($message)
+                    ->addRecipients($user->phone)
+                    ->send();                   
                 }
 
                 if($user && $user->email){
@@ -798,7 +810,7 @@ class ProgrammeController extends Controller
                     $mail['user'] = $user;
                     $mail['programme'] = $programme;
                     $mail['church'] = $request->church;
-                    //$user->notify(new ProgrammeHandler($mail));                  
+                    $user->notify(new ProgrammeHandler($mail));                  
                 }
             }
         }

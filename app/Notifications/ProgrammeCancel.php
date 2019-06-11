@@ -46,11 +46,14 @@ class ProgrammeCancel extends Notification
     {
         $emailContent = '';
 
+        $contact = $this->organizer->phone ? 
+        $this->organizer->phone : $this->organizer->email;
+
         if(!$this->programme->message){
             $emailContent = 'This is to notify you that the programme '.
-            $this->programme->title.'('.$this->church->name_of_church.') has been cancelled. '.
-            'You may reachout to '.$this->organizer->first_name.' '.$this->organizer->last_name.', '.
-            $this->organizer->phone.' for more info. Sorry for any inconviences.';
+            $this->programme->title.' ('.$this->church->name_of_church.') has been cancelled. '.
+            'You may reachout to '.$this->organizer->full_name.', '.$contact.
+            ' for more info. Sorry for any inconviences.';
         }
 
         $emailContent = $this->programme->message;

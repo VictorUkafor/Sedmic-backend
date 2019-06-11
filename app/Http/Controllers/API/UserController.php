@@ -41,22 +41,20 @@ class UserController extends Controller
             
             if($user->email){
                 $user->notify(new ConfirmEmail($user));            
-                return response()->json([
-                    'successMessage' => 'Check your mail for a confirmation link',
-                ], 201);
             }
 
             if($user->phone){
                 $message = "$verificationCode is your Sedmic verification code";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($user->phone)
-                // ->send();            
-                return response()->json([
-                    'successMessage' => 'Check your phone for a verification code',
-                ], 201);
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($user->phone)
+                ->send();            
             }
             
+            return response()->json([
+                'successMessage' => 'A message has been sent to your phone/email',
+                'code' => $verificationCode
+            ], 201);   
 
         } else {
             return response()->json([
@@ -106,10 +104,10 @@ class UserController extends Controller
                     $message = "Dear $user->full_name! 
                     Your account at Sedmic is active. You can login now to
                     explore all Sedmic has to offer. Congratulation";
-                    // $sms->fromSender('Sedmic')
-                    // ->composeMessage($message)
-                    // ->addRecipients($user->phone)
-                    // ->send(); 
+                    $sms->fromSender('Sedmic')
+                    ->composeMessage($message)
+                    ->addRecipients($user->phone)
+                    ->send(); 
                 }
                 
                 return response()->json([
@@ -136,22 +134,22 @@ class UserController extends Controller
                 You have completed all the requirement for signup.
                 However, your account will be active when your admin
                 activates it. Best";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($user->phone)
-                // ->send(); 
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($user->phone)
+                ->send(); 
             }
 
             //SuperUser
             if($superUser->phone){
                 $message = "Dear $superUser->full_name! 
-                $this->user->username has completed all requirement for signup. 
+                $user->username has completed all requirement for signup. 
                 However, the account will remain inactive until you activate it. 
                 Best.";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($superUser->phone)
-                // ->send();
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($superUser->phone)
+                ->send();
             }
             
             return response()->json([
@@ -168,7 +166,7 @@ class UserController extends Controller
     }
     
     
-    public function signupConfirmViaEmail(Request $request, $token)
+    public function signupConfirmViaEmail(Request $request, EbulkSMS $sms, $token)
     {
         $user = User::where('activation_token', $token)->first();
         if (!$user) {
@@ -203,10 +201,10 @@ class UserController extends Controller
                     $message = "Dear $user->full_name! 
                     Your account at Sedmic is active. You can login now to
                     explore all Sedmic has to offer. Congratulation";
-                    // $sms->fromSender('Sedmic')
-                    // ->composeMessage($message)
-                    // ->addRecipients($user->phone)
-                    // ->send(); 
+                    $sms->fromSender('Sedmic')
+                    ->composeMessage($message)
+                    ->addRecipients($user->phone)
+                    ->send(); 
                 }
                 
                 
@@ -234,22 +232,22 @@ class UserController extends Controller
                 You have completed all the requirement for signup.
                 However, your account will be active when your admin
                 activates it. Best";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($user->phone)
-                // ->send(); 
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($user->phone)
+                ->send(); 
             }
 
             //SuperUser
             if($superUser->phone){
                 $message = "Dear $superUser->full_name! 
-                $this->user->username has completed all requirement for signup. 
+                $user->username has completed all requirement for signup. 
                 However, the account will remain inactive until you activate it. 
                 Best.";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($superUser->phone)
-                // ->send();
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($superUser->phone)
+                ->send();
             }
             
             return response()->json([
@@ -302,19 +300,22 @@ class UserController extends Controller
 
 
     /**
-     * sign up a user.
+     * sign up an admin
      * 
      */
-    public function createAdmin(Request $request)
+    public function createAdmin(Request $request, EbulkSMS $sms)
     {
         $superUser = auth()->user();
+        $verificationCode = 'S-'.mt_rand(1000000, 9999999);
 
         $user = new User;
 
         $user->username = $request->username;
         $user->email = $request->email;
+        $user->phone = $request->phone;
         $user->church_username = $superUser->church_username;
-        $user->activation_token = str_random(60);
+        $user->activation_token = $request->email ?
+        str_random(60) : $verificationCode;
         $user->account_type = 'gold';
         
         if ($user->save()) {
@@ -323,16 +324,19 @@ class UserController extends Controller
             }
 
             if($user->phone){
+                $url = 'http://localhost:8000/api/v1/auth/confirm-sms';
                 $message = "Hi There! $superUser->full_name has created 
-                an account for you at Sedmic. We would want you to confirm your account to completed the process.";
-                // $sms->fromSender('Sedmic')
-                // ->composeMessage($message)
-                // ->addRecipients($user->phone)
-                // ->send(); 
+                an account for you at Sedmic. Please log on to $url 
+                to complete the process. $verificationCode is your 
+                Sedmic verification code. USERNAME: $user->username";
+                $sms->fromSender('Sedmic')
+                ->composeMessage($message)
+                ->addRecipients($user->phone)
+                ->send(); 
             }
             
             return response()->json([
-                'successMessage' => 'A confirmation mail has been sent to this user',
+                'successMessage' => 'A confirmation message has been sent to this user',
             ], 201); 
 
         } else {
@@ -344,7 +348,7 @@ class UserController extends Controller
     }
 
 
-    public function activateAdmin(Request $request, $userId)
+    public function activateAdmin(Request $request, EbulkSMS $sms, $userId)
     {
         $user = User::find($userId);
         $user->active = true;
@@ -353,7 +357,18 @@ class UserController extends Controller
         if ($user->save()) {
 
             if($user->number_of_activation === 1){
-              $user->notify(new AccountActivate($user));  
+                if($user->email){
+                    $user->notify(new AccountActivate($user));
+                }
+                if($user->phone){
+                    $message = "Hi There! Your account at Sedmic is active now. 
+                    Once again your username is $user->username. 
+                    Thanks for using Sedmic";
+                    $sms->fromSender('Sedmic')
+                    ->composeMessage($message)
+                    ->addRecipients($user->phone)
+                    ->send(); 
+                }
             }
             
             return response()->json([

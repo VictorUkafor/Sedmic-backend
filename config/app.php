@@ -185,6 +185,9 @@ return [
 
         // therealsmat\Ebulksms
         therealsmat\Ebulksms\EbulkSmsServiceProvider::class,
+ 
+        // QrCode
+        SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class
 
     ],
 
@@ -241,6 +244,8 @@ return [
         // Tymon\JWTAuth
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         'JWTFactory' => Tymon\JWTAuth\Facades\JWTFactory::class,
+
+        'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class
 
     ],
 

@@ -20,18 +20,18 @@ Route::group([
 
     // routes that don't need authentication
     Route::prefix('auth')->group(function () {
+        
+        // sign up account
+        Route::post('/signup', 'UserController@signup')
+        ->middleware('validateSignup');
+            
+        // account confirmation via email
+        Route::post('confirm-email/{token}', 'UserController@signupConfirmViaEmail')
+        ->middleware('confirmViaEmail');
 
-        // signup routes
-        Route::prefix('signup')->group(function () {
-            
-            // sigup_email_confirmation route
-            Route::post('/', 'UserController@signupConfirm')
-            ->middleware('validateConfirm');
-            
-            // signup_completion route
-            Route::post('activate/{token}', 'UserController@signupActivate')
-            ->middleware('validateActivate');
-        });
+        // account confirmation via sms
+        Route::post('confirm-sms', 'UserController@signupConfirmViaSMS')
+        ->middleware('confirmViaSMS');
 
         // login route
         Route::post('login', 'UserController@login')
@@ -67,7 +67,7 @@ Route::group([
             
             // create admin
             Route::post('/', 'UserController@createAdmin')
-            ->middleware('validateConfirm');
+            ->middleware('validateSignup');
                 
             Route::group([
                 'prefix' => '{userId}',
@@ -95,7 +95,7 @@ Route::group([
         
         
         // user routes
-        Route::prefix('user')->group(function () {
+        Route::prefix('profile')->group(function () {
             
             // show user
             Route::get('/', 'UserController@show');
