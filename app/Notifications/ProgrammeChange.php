@@ -21,6 +21,8 @@ class ProgrammeChange extends Notification
         $this->user = $mail['user'];
         $this->programme = $mail['programme'];
         $this->church = $mail['church'];
+        $this->organizer = User::find($this->programme->created_by);
+
     }
 
     /**
@@ -42,13 +44,22 @@ class ProgrammeChange extends Notification
      */
     public function toMail($notifiable)
     {
+        $emailContent = '';
+
+        if(!$this->programme->message){
+            $emailContent = 'This is to notify you of the following changes. '
+            .$this->programme->title.'('.$this->church->name_of_church.') will now hold on '
+            .$this->programme->date.' at '.$this->programme->venue.' by '.$this->programme->time_starting.
+            'You may reachout to '.$this->organizer->first_name.' '.$this->organizer->last_name.', '
+            .$this->organizer->phone.' for more info.';
+        }
+
+        $emailContent = $this->programme->message;
+
         return (new MailMessage)
             ->subject('Concerning '.$this->programme->title.' ('.$this->church->name_of_church.')')
             ->greeting('Hi '.$this->user->first_name.' '.$this->user->last_name)
-            ->line('This is to notify you of the following changes. '
-            .$this->programme->title.'('.$this->church->name_of_church.') will now hold on '
-            .$this->programme->date.' at '.$this->programme->venue.
-            ' by '.$this->programme->time_starting)
+            ->line($emailContent)
             ->line('Sorry for any inconviences. God bless you!');
     }
 

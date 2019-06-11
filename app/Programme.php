@@ -26,7 +26,6 @@ class Programme extends Model
         'live',
         'email_notification',
         'sms_notification',
-        'invitation_message',
         'created_by',
         'updated_by',
         'deleted_by',

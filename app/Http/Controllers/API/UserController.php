@@ -14,6 +14,7 @@ use App\Notifications\CompleteSignup;
 use App\Notifications\AdminSignup;
 use Illuminate\Support\Str;
 use JD\Cloudder\Facades\Cloudder;
+use therealsmat\Ebulksms\EbulkSMS;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,21 +24,39 @@ class UserController extends Controller
      * sign up a user.
      * 
      */
-    public function signupConfirm(Request $request)
+    public function signup(Request $request, EbulkSMS $sms)
     {
+        $verificationCode = 'S-'.mt_rand(1000000, 9999999);
         $user = new User;
 
         $user->username = $request->username;
         $user->email = $request->email;
+        $user->phone = $request->phone;
         $user->church_username = $request->username;
-        $user->activation_token = str_random(60);
+        $user->activation_token = $request->email ?
+        str_random(60) : $verificationCode;
         $user->account_type = 'diamond';
         
         if ($user->save()) {
-            $user->notify(new ConfirmEmail($user));
-            return response()->json([
-                'successMessage' => 'Check your mail for a confirmation link',
-            ], 201); 
+            
+            if($user->email){
+                $user->notify(new ConfirmEmail($user));            
+                return response()->json([
+                    'successMessage' => 'Check your mail for a confirmation link',
+                ], 201);
+            }
+
+            if($user->phone){
+                $message = "$verificationCode is your Sedmic verification code";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($user->phone)
+                // ->send();            
+                return response()->json([
+                    'successMessage' => 'Check your phone for a verification code',
+                ], 201);
+            }
+            
 
         } else {
             return response()->json([
@@ -47,61 +66,207 @@ class UserController extends Controller
     }
     
     
-    public function signupActivate(Request $request, $token){
-
-    $user = User::where('activation_token', $token)->first();
-    if (!$user) {
-        return response()->json([
-            'errorMessage' => 'This activation token is invalid.'
-        ], 404);
-    }
-
-    
-    $active = $user->account_type === 'diamond' ? true : false;
-    $image_public_id = $request->image ? $user->username : '';
-
-    if($request->image){
-    Cloudder::upload($request->image->getRealPath(), $image_public_id);
-    }
-
-    $user->active = $active;
-    $user->activation_token = '';
-    $user->full_name = strtolower(preg_replace('/\s+/', ' ', $request->full_name));
-    $user->image = $image_public_id;
-    $user->sex = $request->sex;
-    $user->date_of_birth = $request->date_of_birth;
-    $user->password = Hash::make($request->password);
-
-    if($user->save()) {
-        if($user->active){
-
-            $user->notify(new AccountActivate($user));
-            return response()->json([
-                'successMessage' => 'Account activation successful',
-                'user' => $user,
-                'token' => JWTAuth::fromUser($user)
-            ], 201);           
-        }
-
-        $superUser = User::where('username', $user->church_username)
+    public function signupConfirmViaSMS(Request $request, EbulkSMS $sms)
+    {
+        
+        $user = User::where('activation_token', $request->verification_code)
         ->first();
 
-        $user->notify(new CompleteSignup($user));
-        $superUser->notify(new AdminSignup($user, $superUser));
+        if (!$user) {
+            return response()->json([
+                'errorMessage' => 'Invalid verification code'
+            ], 404);
+        }
+        
+        $active = $user->account_type === 'diamond' ? true : false;
+        $image_public_id = $request->image ? $user->username : '';
+        
+        if($request->image){
+            Cloudder::upload($request->image->getRealPath(), $image_public_id);
+        }
+
+        $user->active = $active;
+        $user->activation_token = '';
+        $user->full_name = strtolower(preg_replace('/\s+/', ' ', $request->full_name));
+        $user->image = $image_public_id;
+        $user->sex = $request->sex;
+        $user->email = $request->email;
+        $user->date_of_birth = $request->date_of_birth;
+        $user->password = Hash::make($request->password);
+        
+
+        if($user->save()) {
+
+            if($user->active){
+                if($user->email){
+                    $user->notify(new AccountActivate($user));
+                }
+
+                if($user->phone){
+                    $message = "Dear $user->full_name! 
+                    Your account at Sedmic is active. You can login now to
+                    explore all Sedmic has to offer. Congratulation";
+                    // $sms->fromSender('Sedmic')
+                    // ->composeMessage($message)
+                    // ->addRecipients($user->phone)
+                    // ->send(); 
+                }
+                
+                return response()->json([
+                    'successMessage' => 'Account activation successful',
+                    'user' => $user,
+                    'token' => JWTAuth::fromUser($user)
+                ], 201);
+            }
+            
+            $superUser = User::where('username', $user->church_username)
+            ->first();
+
+            if($user->email){
+                $user->notify(new CompleteSignup($user));
+            }
+
+            if($superUser->email){
+                $superUser->notify(new AdminSignup($user, $superUser));                
+            }
+           
+            //completeSignup
+            if($user->phone){
+                $message = "Dear $user->full_name! 
+                You have completed all the requirement for signup.
+                However, your account will be active when your admin
+                activates it. Best";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($user->phone)
+                // ->send(); 
+            }
+
+            //SuperUser
+            if($superUser->phone){
+                $message = "Dear $superUser->full_name! 
+                $this->user->username has completed all requirement for signup. 
+                However, the account will remain inactive until you activate it. 
+                Best.";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($superUser->phone)
+                // ->send();
+            }
+            
+            return response()->json([
+                'successMessage' => 'Signup successful. '. 
+                'Please contact your admin for activation',
+                'user' => $user,
+            ], 201);
+
+        }
+        
         return response()->json([
-            'successMessage' => 'Signup successful. '. 
-            'Please contact your admin for activation',
-            'user' => $user,
-        ], 201);
+            'errorMessage' => 'Internal server error'
+        ], 500);
     }
+    
+    
+    public function signupConfirmViaEmail(Request $request, $token)
+    {
+        $user = User::where('activation_token', $token)->first();
+        if (!$user) {
+            return response()->json([
+                'errorMessage' => 'This activation token is invalid.'
+            ], 404);
+        }
+        
+        $active = $user->account_type === 'diamond' ? true : false;
+        $image_public_id = $request->image ? $user->username : '';
+        
+        if($request->image){
+            Cloudder::upload($request->image->getRealPath(), $image_public_id);
+        }
 
-    return response()->json([
-        'errorMessage' => 'Internal server error'
-    ], 500);
-}
+        $user->active = $active;
+        $user->activation_token = '';
+        $user->full_name = strtolower(preg_replace('/\s+/', ' ', $request->full_name));
+        $user->image = $image_public_id;
+        $user->sex = $request->sex;
+        $user->phone = $request->phone;
+        $user->date_of_birth = $request->date_of_birth;
+        $user->password = Hash::make($request->password);
 
+        if($user->save()) {
+            if($user->active){
+                if($user->email){
+                    $user->notify(new AccountActivate($user));
+                }
+                
+                if($user->phone){
+                    $message = "Dear $user->full_name! 
+                    Your account at Sedmic is active. You can login now to
+                    explore all Sedmic has to offer. Congratulation";
+                    // $sms->fromSender('Sedmic')
+                    // ->composeMessage($message)
+                    // ->addRecipients($user->phone)
+                    // ->send(); 
+                }
+                
+                
+                return response()->json([
+                    'successMessage' => 'Account activation successful',
+                    'user' => $user,
+                    'token' => JWTAuth::fromUser($user)
+                ], 201);
+            }
 
-public function login(Request $request){
+            $superUser = User::where('username', $user->church_username)
+            ->first();
+
+            if($user->email){
+                $user->notify(new CompleteSignup($user));
+            }
+
+            if($superUser->email){
+                $superUser->notify(new AdminSignup($user, $superUser));                
+            }
+           
+            //completeSignup
+            if($user->phone){
+                $message = "Dear $user->full_name! 
+                You have completed all the requirement for signup.
+                However, your account will be active when your admin
+                activates it. Best";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($user->phone)
+                // ->send(); 
+            }
+
+            //SuperUser
+            if($superUser->phone){
+                $message = "Dear $superUser->full_name! 
+                $this->user->username has completed all requirement for signup. 
+                However, the account will remain inactive until you activate it. 
+                Best.";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($superUser->phone)
+                // ->send();
+            }
+            
+            return response()->json([
+                'successMessage' => 'Signup successful. '.
+                'Please contact your admin for activation',
+                'user' => $user,
+            ], 201);
+        }
+        
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+    
+    }
+    
+    
+    public function login(Request $request){
 
     $user = User::where('username', $request->username)->first();
     $logins = $request->only('username', 'password');
@@ -153,7 +318,19 @@ public function login(Request $request){
         $user->account_type = 'gold';
         
         if ($user->save()) {
-            $user->notify(new AdminConfirm($user, $superUser));
+            if($user->email){
+                $user->notify(new AdminConfirm($user, $superUser));
+            }
+
+            if($user->phone){
+                $message = "Hi There! $superUser->full_name has created 
+                an account for you at Sedmic. We would want you to confirm your account to completed the process.";
+                // $sms->fromSender('Sedmic')
+                // ->composeMessage($message)
+                // ->addRecipients($user->phone)
+                // ->send(); 
+            }
+            
             return response()->json([
                 'successMessage' => 'A confirmation mail has been sent to this user',
             ], 201); 

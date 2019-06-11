@@ -503,8 +503,11 @@ Route::group([
                         Route::put('/', 'ProgrammeController@update')
                         ->middleware('editProgramme');
 
-                        // delete programme
-                        Route::delete('/', 'ProgrammeController@delete');
+                        // cancel programme
+                        Route::delete('/', 'ProgrammeController@cancel');
+
+                        // suspend programme
+                        Route::post('/', 'ProgrammeController@suspend');
 
                         // program handler routes
                         Route::prefix('handlers')->group(function () {

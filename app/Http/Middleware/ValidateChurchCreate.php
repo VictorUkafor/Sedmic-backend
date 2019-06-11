@@ -20,6 +20,7 @@ class ValidateChurchCreate
             'name_of_church' => 'required',
             'images' => 'image',
             'official_email' => 'email',
+            'sms_sender_name' => 'max:11',
         ]);
 
         if ($validator->fails()) {

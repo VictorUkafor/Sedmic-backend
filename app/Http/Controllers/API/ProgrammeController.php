@@ -11,6 +11,9 @@ use App\Invitee;
 use App\User;
 use App\Notifications\ProgrammeInvitation;
 use App\Notifications\ProgrammeChange;
+use App\Notifications\ProgrammeCancel;
+use App\Notifications\ProgrammeSuspend;
+use App\Notifications\ProgrammeHandler;
 use therealsmat\Ebulksms\EbulkSMS;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,34 +32,93 @@ class ProgrammeController extends Controller
 
         $programme = new Programme;
         $programme->church_id = $request->church->id;
-        $programme->title = $request->title;
+        $programme->title = strtolower(preg_replace('/\s+/', ' ', $request->title));
         $programme->type_of_meeting = $request->type_of_meeting;
         $programme->live = $request->live;
         $programme->date = $request->date;
 
         $programme->venue = $request->venue ? 
-        $request->venue : $request->church->venue;
+        strtolower(preg_replace('/\s+/', ' ', $request->venue)) :
+        $request->church->venue;
 
         $programme->time_starting = $request->time_starting;
         $programme->time_ending = $request->time_ending;
         $programme->email_notification = $request->email_notification;
         $programme->sms_notification = $request->sms_notification;
-        $programme->invitation_message = $request->invitation_message;
         $programme->created_by = $request->user->id;
 
         if($programme->save()) {
-            if($request->invitation_on_creation && $request->email_notification){
 
-                if($invitees && $invitees['members']){
+            $organizer = User::find($programme->created_by);
+
+            $smsSender = $request->church->sms_sender_name ? 
+            $request->church->sms_sender_name : 'Sedmic';
+
+            $mail = [];
+            $mail['programme'] = $programme;
+            $mail['church'] = $request->church;
+            
+            DB::table('handlers')->insert([
+                'programme_id' => $programme->id, 
+                'user_id' => $request->user->id,
+                'created_by' => $request->user->id,
+            ]);
+            
+
+            if($handlers && count($handlers)){
+                foreach($handlers as $id){
+                    $user = User::find($id);
+
+                    $handler = Handler::where([
+                        'programme_id' => $programme->id,
+                        'user_id' => $id
+                    ])->first();
+
+                    $message = $request->message ? $request->message : 
+                    'Hi '.$user->first_name.' '.$user->last_name.
+                    '. This is to notify you that you are now an handler to the programme '.
+                    $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
+                    $organizer->full_name.', '.$organizer->phone ? $organizer->phone : $organizer->email.
+                    ' for more info. God bless you';
+
+                    $programme->message = $message;
+
+                    if($user && $user->church_id = $programme->church_id && !$handler){
+                        DB::table('handlers')->insert([
+                            'programme_id' => $programme->id, 
+                            'user_id' => $id,
+                            'created_by' => $request->user->id,
+                        ]);                      
+                    }
+
+                    if($user && $user->phone){
+                        // $sms->fromSender($smsSender)
+                        // ->composeMessage($message)
+                        // ->addRecipients($user->phone)
+                        // ->send();                   
+                    }
+
+                    if($user && $user->email){
+                        $mail['user'] = $user;
+                        //$user->notify(new ProgrammeHandler($mail));                  
+                    }
+
+                }
+            }
+
+
+            $message = $request->message ? $request->message : 
+            'Hi There! You\'ve been invited to attend '
+            .$programme->title.'('.$request->church->name_of_church.') taking place at '
+            .$programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
+            '. We\'ll be expecting you. You may reachout to '.$organizer->full_name.', '.
+            $organizer->phone ? $organizer->phone : $organizer->email.' for more info.  God bless you!';
+
+            $programme->message = $message;
+
+            if($invitees && $invitees['members']){
                     foreach($invitees['members'] as $memberId){
                         $member = Member::find($memberId);
-                        if($member && $member->email){
-                            $mail = [];
-                            $mail['user'] = $member;
-                            $mail['programme'] = $programme;
-                            $mail['church'] = $request->church;
-                            //$member->notify(new ProgrammeInvitation($mail));
-                        }
 
                         if($member){
                             DB::table('invitees')->insert([
@@ -67,160 +129,133 @@ class ProgrammeController extends Controller
                                 'image' => $member->image,
                                 'created_by' => $request->user->id,
                             ]);
-                        }   
-                    }
-                }
 
-                if($invitees && $invitees['firstTimers']){
-                    foreach($invitees['firstTimers'] as $firstTimerId){
-                        $firstTimer = FirstTimer::find($firstTimerId);
-                        if($firstTimer && $firstTimer->email){
-                            $mail = [];
-                            $mail['user'] = $firstTimer;
-                            $mail['programme'] = $programme;
-                            $mail['church'] = $request->church;
-                            //$firstTimer->notify(new ProgrammeInvitation($mail));
-                        } 
 
-                        if($firstTimer){
-                            DB::table('invitees')->insert([
-                                'programme_id' => $programme->id,
-                                'first_timer_id' => $firstTimer->id,
-                                'first_name' => $firstTimer->first_name,
-                                'last_name' => $firstTimer->last_name,                            
-                                'image' => $firstTimer->image,
-                                'created_by' => $request->user->id,
-                            ]);
-                        } 
-                    }
-                }
+                            if($request->invitation_on_creation){
 
-                if($invitees && $invitees['slips']){
-                    foreach($invitees['slips'] as $slipId){
-                        $slip = Slip::find($slipId);
-                        if($slip && $slip->email){
-                            $mail = [];
-                            $mail['user'] = $slip;
-                            $mail['programme'] = $programme;
-                            $mail['church'] = $request->church;
-                            //$slip->notify(new ProgrammeInvitation($mail));
-                        } 
+                                if($programme->email_notification && $member->email){
+                                    $mail['user'] = $member;
+                                    //$member->notify(new ProgrammeInvitation($mail);
+                                }
+
+                                if($programme->sms_notification && $member->phone){
+                                   // $sms->fromSender($smsSender)
+                                   // ->composeMessage($message)
+                                   // ->addRecipients($member->phone)
+                                   // ->send();
+                                }
                         
-                        if($slip){
-                            DB::table('invitees')->insert([
+                        
+                        } 
+                    
+                    }
+                
+                }
+            
+            }
+
+
+            if($invitees && $invitees['slips']){
+                foreach($invitees['slips'] as $slipId){
+                    $slip = Slip::find($slipId);
+
+                    if($slip){
+                        DB::table('invitees')->insert([
                             'programme_id' => $programme->id,
                             'slip_id' => $slip->id,
                             'first_name' => $slip->first_name,
                             'last_name' => $slip->last_name,                            
                             'image' => $slip->image,
                             'created_by' => $request->user->id,
-                            ]);
+                        ]);
 
+
+                        if($request->invitation_on_creation){
+
+                            if($programme->email_notification && $slip->email){
+                                $mail['user'] = $slip;
+                                //$slip->notify(new ProgrammeInvitation($mail);
+                            }
+
+                            if($programme->sms_notification && $slip->phone){
+                               // $sms->fromSender($smsSender)
+                               // ->composeMessage($message)
+                               // ->addRecipients($slip->phone)
+                               // ->send();
+                            }
+                        
+                        
                         }
+                    
                     }
-                } 
-
-
+                
+                }
+            
             }
 
 
-            if($request->invitation_on_creation && $request->sms_notification){
+            if($invitees && $invitees['firstTimers']){
+                foreach($invitees['firstTimers'] as $firstTimerId){
+                    $firstTimer = FirstTimer::find($firstTimerId);
 
-                $smsSender = $request->church->sms_sender_name ? 
-                $request->church->sms_sender_name : 'Sedmic';
-
-                $invitationMessage = $programme->invitation_message ? $programme->invitation_message : 
-                'Hi '.$request->user->first_name.' '.$request->user->last_name.
-                ' You\'ve been invited to attend '.$programme->title.'('.$requrst->church->name_of_church.
-                ') taking place at '.$programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
-                ' We\'ll be expecting you. God bless you!';
-
-                if($invitees && $invitees['members']){
-                    foreach($invitees['members'] as $memberId){
-                        $member = Member::find($memberId);
-                        if($member && $member->phone){
-                            // $sms->fromSender($smsSender)
-                            // ->composeMessage($invitationMessage)
-                            // ->addRecipients($member->phone)
-                            // ->send();
-                        }     
-                    }
-                }
-
-                if($invitees && $invitees['firstTimers']){
-                    foreach($invitees['firstTimers'] as $firstTimerId){
-                        $firstTimer = FirstTimer::find($firstTimerId);
-                        if($firstTimer && $firstTimer->phone){
-                            // $sms->fromSender($smsSender)
-                            // ->composeMessage($invitationMessage)
-                            // ->addRecipients($firstTimer->phone)
-                            // ->send();
-                        }     
-                    }
-                }
-
-                if($invitees && $invitees['slips']){
-                    foreach($invitees['slips'] as $slipId){
-                        $slip = Slip::find($slipId);
-                        if($slip && $slip->phone){
-                            // $sms->fromSender($smsSender)
-                            // ->composeMessage($invitationMessage)
-                            // ->addRecipients($slip->phone)
-                            // ->send();
-                        }     
-                    }
-                }
-
-            }
-            
-            DB::table('handlers')->insert([
-                'programme_id' => $programme->id, 
-                'user_id' => $request->user->id,
-                'created_by' => $request->user->id,
-            ]);
-            
-            if($handlers && count($handlers)){
-                foreach($handlers as $id){
-
-                    $user = User::where($id);
-
-                    $handler = Handler::where([
-                        'programme_id' => $programme->id,
-                        'user_id' => $id
-                    ])->first();
-
-                    if($user && $user->church_id = $programme->church_id && !$handler){
-                        DB::table('handlers')->insert([
-                            'programme_id' => $programme->id, 
-                            'user_id' => $id,
+                    if($firstTimer){
+                        DB::table('invitees')->insert([
+                            'programme_id' => $programme->id,
+                            'first_timer_id' => $firstTimer->id,
+                            'first_name' => $firstTimer->first_name,
+                            'last_name' => $firstTimer->last_name,                            
+                            'image' => $firstTimer->image,
                             'created_by' => $request->user->id,
-                        ]);                      
-                    }
+                        ]);
 
+
+                        if($request->invitation_on_creation){
+
+                            if($programme->email_notification && $firstTimer->email){
+                                $mail['user'] = $firstTimer;
+                                //$firstTimer->notify(new ProgrammeInvitation($mail);
+                            }
+
+                            if($programme->sms_notification && $firstTimer->phone){
+                               // $sms->fromSender($smsSender)
+                               // ->composeMessage($message)
+                               // ->addRecipients($firstTimer->phone)
+                               // ->send();
+                            }
+                        
+                        
+                        }
+                    
+                    }
+                
                 }
+            
             }
+            
             
             return response()->json([
                 'successMessage' => 'Programme created successfully',
                 'programme' => $programme
-            ], 201);
+            ], 201);  
 
-        } 
+        }
+        
         
         return response()->json([
             'errorMessage' => 'Internal server error'
         ], 500);
-    
+
     }
 
 
 
-    public function update(Request $request)
+    public function update(Request $request, EbulkSMS $sms)
     {
         $programme = $request->programme;
 
         $programme->title = $request->title ? 
-        $request->title : $programme->title;
+        strtolower(preg_replace('/\s+/', ' ', $request->title)) :
+        $programme->title;
 
         $programme->type_of_meeting = $request->type_of_meeting ? 
         $request->type_of_meeting : $programme->type_of_meeting;
@@ -237,14 +272,15 @@ class ProgrammeController extends Controller
         $programme->live = $request->live ? 
         $request->live : $programme->live;
 
+        $programme->venue = $request->venue ? 
+        strtolower(preg_replace('/\s+/', ' ', $request->venue)) :
+        $programme->venue;
+
         $programme->email_notification = $request->email_notification ? 
         $request->email_notification : $programme->email_notification;
 
         $programme->sms_notification = $request->sms_notification ? 
         $request->sms_notification : $programme->sms_notification;
-
-        $programme->invitation_message = $request->invitation_message ?
-        $request->invitation_message : $programme->invitation_message;
 
         $programme->updated_by = $request->user->id;
 
@@ -254,50 +290,76 @@ class ProgrammeController extends Controller
             if(($request->date && $request->date != $programme->date) || 
             ($request->time_starting && $request->time_starting != $programme->time_starting) ||
             ($request->venue && $request->venue != $programme->venue)){
-                
+
+
+                $organizer = User::find($programme->created_by);
+                $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+                $handlers = $handlers->toArray();
                 $invitees = Invitee::where('programme_id', $programme->id)->get();
 
-                    if(count($invitees)){
-                        foreach($invitees as $invitee){
+                $smsSender = $request->church->sms_sender_name ? 
+                $request->church->sms_sender_name : 'Sedmic';
 
+                $message = $request->message ? $request->message : 
+                'Hi There! This is to notify you of the following changes. '
+                .$programme->title.'('.$request->church->name_of_church.') will now hold on '
+                .$programme->date.' at '.$programme->venue.' by '.$programme->time_starting.
+                'You may reachout to '.$organizer->full_name.', '.$organizer->phone ? 
+                $organizer->phone : $organizer->email.
+                ' for more info. Sorry for any inconviences. God bless you';
+
+                $mail = [];
+                $programme->message = $message;
+                $mail['programme'] = $programme;
+                $mail['church'] = $request->church;
+
+
+                if($handlers && count($handlers)){
+                    foreach($handlers as $id){
+    
+                        $user = User::find($id);
+                        if($user && $user->phone){
+                            // $sms->fromSender($smsSender)
+                            // ->composeMessage($message)
+                            // ->addRecipients($user->phone)
+                            // ->send();                   
+                        }
+    
+                        if($user && $user->email){
+                            $mail['user'] = $user;
+                            //$user->notify(new ProgrammeChange($mail));                  
+                        }
+    
+                    }
+                }
+
+                
+                if(count($invitees)){
+                        foreach($invitees as $invitee){
                             if($request->email_notification){
                                 
                                 if($invitee->member_id && Member::find($invitee->member_id)){
                                     $member = Member::find($invitee->member_id);
-                                    $mail = [];
                                     $mail['user'] = $member;
-                                    $mail['programme'] = $programme;
-                                    $mail['church'] = $request->church;
                                     //$member->notify(new ProgrammeChange($mail));
                                 }
 
                                 if($invitee->slip_id && Slip::find($invitee->slip_id)){
                                     $slip = Slip::find($invitee->slip_id);
-                                    $mail = [];
                                     $mail['user'] = $slip;
-                                    $mail['programme'] = $programme;
-                                    $mail['church'] = $request->church;
                                     //$slip->notify(new ProgrammeChange($mail));
                                 }
 
                                 if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
                                     $firstTimer = FirstTimer::find($invitee->first_timer_id);
-                                    $mail = [];
                                     $mail['user'] = $firstTimer;
-                                    $mail['programme'] = $programme;
-                                    $mail['church'] = $request->church;
                                     //$firstTimer->notify(new ProgrammeChange($mail));
-                            }
+                                }
                             
+                            }
+
+
                             if($request->sms_notification){
-
-                                $smsSender = $request->church->sms_sender_name ? 
-                                $request->church->sms_sender_name : 'Sedmic';
-
-                                $message = 'Hi there! This is to notify you of the following changes. '
-                                .$programme->title.'('.$request->church->name_of_church.') will now hold on '
-                                .$programme->date.' at '.$programme->venue.' by '.$programme->time_starting.
-                                ' Sorry for any inconviences. God bless you';
 
                                 if($invitee->slip_id && Slip::find($invitee->slip_id)){
                                     $slip = Slip::find($invitee->slip_id);                                    
@@ -332,16 +394,12 @@ class ProgrammeController extends Controller
 
                                 }
 
-                            }
-
-                        }
+                            }    
                         
                     }
 
-    
                 }
-    
-    
+
 
             }
 
@@ -401,20 +459,134 @@ class ProgrammeController extends Controller
     }
 
 
-    public function delete(Request $request, $programmeId)
+    public function cancel(Request $request, EbulkSMS $sms, $programmeId)
     {
         $programme = $request->programme;
+
         $programme->update([
             'deleted_by' => $request->user->id
         ]);
 
-        $handlers = Handler::where('programme_id', $programmeId)->pluck(id);
         $deleteProgramme = Programme::destroy($programmeId);
-        $deleteHandlers = Handler::destroy($handlers->toArray());  
 
-        if($programme && $deleteProgramme && $deleteHandlers) {
+        if($programme && $deleteProgramme) {
+            $organizer = User::find($programme->created_by);
+
+            $handlers = Handler::where('programme_id', $programmeId)->get();
+            $handlersId = Handler::where('programme_id', $programmeId)->pluck('id');
+
+            $invitees = Invitee::where('programme_id', $programmeId)->get();
+            $inviteesId = Invitee::where('programme_id', $programmeId)->pluck('id');
+
+            $smsSender = $request->church->sms_sender_name ? 
+            $request->church->sms_sender_name : 'Sedmic';
+
+            $message = $request->message ? $request->message :
+            'Hi there! This is to notify you that the programme '.
+            $programme->title.'('.$request->church->name_of_church.') has been cancelled. '.
+            'You may reachout to '.$organizer->full_name.', '.$organizer->phone ?
+            $organizer->phone : $organizer->email.
+            ' for more info. Sorry for any inconviences. God bless you';
+
+            $programme->message = $message;
+
+            $mail = [];
+            $mail['programme'] = $programme;
+            $mail['church'] = $request->church;
+
+
+            if($handlers && count($handlers)){
+                foreach($handlers as $id){
+
+                    $user = User::find($id);
+                    if($user && $user->phone){
+                        // $sms->fromSender($smsSender)
+                        // ->composeMessage($message)
+                        // ->addRecipients($user->phone)
+                        // ->send();                   
+                    }
+
+                    if($user && $user->email){
+                        $mail['user'] = $user;
+                        //$user->notify(new ProgrammeCancel($mail));                  
+                    }
+
+                }
+            }
+
+
+            if(count($invitees)){
+                foreach($invitees as $invitee){
+                    if($request->email_notification){    
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);
+                            $mail['user'] = $member;
+                            //$member->notify(new ProgrammeCancel($mail));
+                        }
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);
+                            $mail['user'] = $slip;
+                            //$slip->notify(new ProgrammeCancel($mail));
+                        }
+
+                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                            $mail['user'] = $firstTimer;
+                            //$firstTimer->notify(new ProgrammeCancel($mail));
+                        }
+                    
+                    }
+
+
+                    if($request->sms_notification){
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);                                    
+                            if($slip->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($slip->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);                                    
+                            if($member->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($member->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                            if($firstTimer->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($firstTimer->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            Handler::destroy($handlersId->toArray());
+            Invitee::destroy($inviteesId->toArray());
+
+
             return response()->json([
-                'successMessage' => 'Programme deleted successfully'
+                'successMessage' => 'Programme cancelled successfully'
             ], 200);
         }
 
@@ -425,12 +597,152 @@ class ProgrammeController extends Controller
     }
 
 
-    public function addHandlers(Request $request)
+    public function suspend(Request $request, EbulkSMS $sms)
+    {
+        $programme = $request->programme;
+        $programme->update([
+            'block' => 1,
+            'updated_by' => $request->user->id
+        ]);
+
+        if($programme) {
+            $organizer = User::find($programme->created_by);
+
+            $handlers = Handler::where('programme_id', $programme->id)->get();
+            $handlersId = Handler::where('programme_id', $programme->id)->pluck('id');
+
+            $invitees = Invitee::where('programme_id', $programme->id)->get();
+            $inviteesId = Invitee::where('programme_id', $programme->id)->pluck('id');
+
+            $smsSender = $request->church->sms_sender_name ? 
+            $request->church->sms_sender_name : 'Sedmic';
+            
+            $message = $request->message ? $request->message :
+            'Hi There! This is to notify you that the programme '.
+            $programme->title.'('.$request->church->name_of_church.
+            ') has been suspended till further notice. You may reachout to '.
+            $organizer->full_name.', '.$organizer->phone ? 
+            $organizer->phone : $organizer->email.
+            ' for more info. Sorry for any inconviences. God bless you';
+
+            $mail = [];
+            $programme->message = $message;
+            $mail['programme'] = $programme;
+            $mail['church'] = $request->church;
+
+            if($handlers && count($handlers)){
+                foreach($handlers as $id){
+                    $smsSender = $request->church->sms_sender_name ? 
+                    $request->church->sms_sender_name : 'Sedmic';
+
+                    $user = User::find($id);
+                    if($user && $user->phone){
+                        // $sms->fromSender($smsSender)
+                        // ->composeMessage($message)
+                        // ->addRecipients($user->phone)
+                        // ->send();                   
+                    }
+
+                    if($user && $user->email){
+                        $mail['user'] = $user;
+                        //$user->notify(new ProgrammeSuspend($mail));                  
+                    }
+
+                }
+            }
+
+
+            if(count($invitees)){
+                foreach($invitees as $invitee){
+
+                    if($request->email_notification){
+                        
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);
+                            $mail['user'] = $member;
+                            //$member->notify(new ProgrammeSuspend($mail));
+                        }
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);
+                            $mail['user'] = $slip;
+                            //$slip->notify(new ProgrammeSuspend($mail));
+                        }
+
+                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                            $mail['user'] = $firstTimer;
+                            //$firstTimer->notify(new ProgrammeSuspend($mail));
+                        }
+                    
+                    }
+
+
+                    if($request->sms_notification){
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);                                    
+                            if($slip->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($slip->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);                                    
+                            if($member->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($member->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                            if($firstTimer->phone){
+                                // $sms->fromSender($smsSender)
+                                // ->composeMessage($message)
+                                // ->addRecipients($firstTimer->phone)
+                                // ->send();
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            return response()->json([
+                'successMessage' => 'Programme suspended successfully'
+            ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
+
+    public function addHandlers(Request $request, EbulkSMS $sms)
     {
         $programme = $request->programme;
 
         $handlers = json_decode(json_encode($request->handlers), true);
         $handlers = json_decode($handlers, true);
+
+        $oldHandlers = Handler::where([
+            'programme_id' => $programme->id,
+            'user_id' => $id
+        ])->pluck('user_id')->toArray();
 
         foreach($handlers as $id){
 
@@ -449,6 +761,45 @@ class ProgrammeController extends Controller
                         'user_id' => $id,
                         'created_by' => $request->user->id,
                     ]);                      
+            }
+        }
+
+
+        $newHandlers = Handler::where([
+            'programme_id' => $programme->id,
+            'user_id' => $id
+        ])->pluck('user_id')->toArray();
+
+
+        foreach($newHandlers as $newHandler){
+            if(!in_array($newHandler, $oldHandlers)){
+                $user = User::find($newHandler);
+
+                $organizer = User::find($programme->created_by);
+
+                $smsSender = $request->church->sms_sender_name ? 
+                $request->church->sms_sender_name : 'Sedmic';
+
+                $message = 'Hi '.$user->first_name.' '.$user->last_name.
+                '. This is to notify you that you are now an handler to the programme '.
+                $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
+                $organizer->full_name.', '.$organizer->phone ? $organizer->phone :
+                $organizer->email.' for more info. God bless you';
+
+                if($user && $user->phone){
+                    // $sms->fromSender($smsSender)
+                    // ->composeMessage($message)
+                    // ->addRecipients($user->phone)
+                    // ->send();                   
+                }
+
+                if($user && $user->email){
+                    $mail = [];
+                    $mail['user'] = $user;
+                    $mail['programme'] = $programme;
+                    $mail['church'] = $request->church;
+                    //$user->notify(new ProgrammeHandler($mail));                  
+                }
             }
         }
 
