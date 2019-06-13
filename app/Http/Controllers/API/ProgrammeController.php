@@ -54,6 +54,8 @@ class ProgrammeController extends Controller
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
 
+            $programme->message = $request->message;
+
             $mail = [];
             $mail['programme'] = $programme;
             $mail['church'] = $request->church;
@@ -74,17 +76,11 @@ class ProgrammeController extends Controller
                         'user_id' => $id
                     ])->first();
 
-                    if($user){
-
-                    }
-
                     $message = $request->message ? $request->message : 
                     'Hi There! This is to notify you that you are now an handler to the programme '.
                     $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
                     $organizer->full_name.', '.$organizer->phone ? $organizer->phone : $organizer->email.
                     ' for more info. God bless you';
-
-                    $programme->message = $message;
 
                     if($user && $user->church_id = $programme->church_id && !$handler){
                         DB::table('handlers')->insert([
@@ -119,9 +115,7 @@ class ProgrammeController extends Controller
             $programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
             '. We\'ll be expecting you. You may reachout to '.$organizer->full_name.', '.
             $contact.' for more info.  God bless you!';
-
-            $programme->message = $message;
-
+            
             if($invitees && $invitees['members']){
                     foreach($invitees['members'] as $memberId){
                         $member = Member::find($memberId);
@@ -317,7 +311,7 @@ class ProgrammeController extends Controller
                 ' for more info. Sorry for any inconviences. God bless you';
 
                 $mail = [];
-                $programme->message = $message;
+                $programme->message = $request->message;
                 $mail['programme'] = $programme;
                 $mail['church'] = $request->church;
 
@@ -498,7 +492,7 @@ class ProgrammeController extends Controller
             'You may reachout to '.$organizer->full_name.', '.$contact.
             ' for more info. Sorry for any inconviences. God bless you';
 
-            $programme->message = $message;
+            $programme->message = $request->message;
 
             $mail = [];
             $mail['programme'] = $programme;
@@ -611,7 +605,7 @@ class ProgrammeController extends Controller
     {
         $programme = $request->programme;
         $programme->update([
-            'block' => 1,
+            'date' => null,
             'updated_by' => $request->user->id
         ]);
 
@@ -636,7 +630,7 @@ class ProgrammeController extends Controller
             ' for more info. Sorry for any inconviences. God bless you';
 
             $mail = [];
-            $programme->message = $message;
+            $programme->message = $request->message;
             $mail['programme'] = $programme;
             $mail['church'] = $request->church;
 
@@ -797,6 +791,8 @@ class ProgrammeController extends Controller
                 '. This is to notify you that you are now an handler to the programme '.
                 $programme->title.'('.$request->church->name_of_church.'). You may reachout to '.
                 $organizer->full_name.', '.$contact.' for more info. God bless you';
+
+                $programme->message = $request->message;
 
                 if($user && $user->phone){
                     $sms->fromSender($smsSender)

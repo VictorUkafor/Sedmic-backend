@@ -34,6 +34,12 @@ class ValidateProgramme
         } 
 
 
+        // if ($request->time_ending > $request->time_starting){
+        //     return response()->json([
+        //         'errorMessage' => 'Time ending must be greater than time starting'
+        //     ], 400);
+        // }
+
         $programme = Programme::where([
             'title' => $request->title,
             'church_id' => $request->church->id,

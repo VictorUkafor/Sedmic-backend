@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Programme;
+use App\Handler;
 use Closure;
 use Validator;
 
@@ -20,7 +21,10 @@ class ProgrammeExist
         $id = $request->route('programmeId');
         $church = $request->church;
         $programme = Programme::find($id);
+        $handlersTo = Handler::where('user_id', $request->user->id)
+        ->pluck('programme_id')->toArray();
 
+        
         if (!$programme){
             return response()->json([
                 'errorMessage' => 'Programme could not be found'
@@ -33,8 +37,17 @@ class ProgrammeExist
             ], 401); 
         }
 
-        $request->programme = $programme;
-        return $next($request);
+        if($programme->type_of_programme == 'open' || 
+        $programme->created_by == $request->user->id ||
+        in_array($programme->id, $handlersTo)){
 
+            $request->programme = $programme;
+            return $next($request);
+
+        }
+
+        return response()->json([
+            'errorMessage' => 'Unauthorized'
+        ], 401); 
     }
 }

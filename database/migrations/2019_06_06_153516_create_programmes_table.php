@@ -27,7 +27,7 @@ class CreateProgrammesTable extends Migration
             $table->integer('live')->default(true);
             $table->integer('email_notification')->default(true);
             $table->integer('sms_notification')->default(true);
-            $table->integer('block')->default(false);
+            $table->integer('report')->default(false)->nullable();
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
             $table->integer('deleted_by')->nullable();

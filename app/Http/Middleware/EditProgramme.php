@@ -31,6 +31,18 @@ class EditProgramme
         } 
 
 
+        $time_starting = $request->time_ending ?
+        $request->time_ending : $programme->time_ending;
+
+        $time_ending = $request->time_ending ?
+        $request->time_ending : $programme->time_ending;
+
+        if ($time_ending > $time_starting){
+            return response()->json([
+                'errorMessage' => 'Time ending must be greater than time starting'
+            ], 400);
+        }
+
         $findProgramme = Programme::where([
             'church_id' => $request->church->id,
             'title' => $request->title

@@ -24,7 +24,7 @@ class Programme extends Model
         'time_ending',
         'ministered_by',
         'live',
-        'block',
+        'report',
         'email_notification',
         'sms_notification',
         'created_by',
