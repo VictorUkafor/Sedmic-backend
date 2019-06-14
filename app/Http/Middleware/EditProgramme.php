@@ -37,9 +37,29 @@ class EditProgramme
         $time_ending = $request->time_ending ?
         $request->time_ending : $programme->time_ending;
 
-        if ($time_ending > $time_starting){
+        $date = $request->date ?
+        $request->date : $programme->date;
+
+        $report = $request->report ?
+        $request->report : $programme->report;
+
+
+        if ($time_ending < $time_starting){
             return response()->json([
                 'errorMessage' => 'Time ending must be greater than time starting'
+            ], 400);
+        }
+
+
+        if ($report == 0 && date('Y-m-d') < $date){
+            return response()->json([
+                'errorMessage' => 'Date must be in the future'
+            ], 400);
+        }
+
+        if ($report == 1 && date('Y-m-d') > $date){
+            return response()->json([
+                'errorMessage' => 'Date must be in the past'
             ], 400);
         }
 

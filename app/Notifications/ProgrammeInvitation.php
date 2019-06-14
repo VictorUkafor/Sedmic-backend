@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use PDF;
+use QrCode;
 use App\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -45,8 +47,11 @@ class ProgrammeInvitation extends Notification
      */
     public function toMail($notifiable)
     {
-        $emailContent = '';
+        $ticket = PDF::loadView('ticket');
+        $code = QrCode::format('png')
+        ->size(150)->generate('sedmic IV code'); 
 
+        $emailContent = '';
         $contact = $this->organizer->phone ? 
         $this->organizer->phone : $this->organizer->email;
 
@@ -62,6 +67,7 @@ class ProgrammeInvitation extends Notification
 
         return (new MailMessage)
             ->subject('Invitation to '.$this->programme->title.' ('.$this->church->name_of_church.')')
+            //->attachData($ticket->output(), "sedmic.pdf")
             ->greeting('Hi '.$this->user->first_name.' '.$this->user->last_name)
             ->line($emailContent)
             ->line('We\'ll be expecting you. God bless you!');

@@ -20,7 +20,7 @@ class CreateProgrammesTable extends Migration
             $table->integer('aggregate_id')->unsigned()->nullable();
             $table->string('title');
             $table->string('type_of_meeting');
-            $table->date('date');
+            $table->date('date')->nullable();
             $table->text('venue')->nullable();
             $table->time('time_starting');
             $table->time('time_ending');

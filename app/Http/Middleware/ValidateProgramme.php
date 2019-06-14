@@ -34,11 +34,25 @@ class ValidateProgramme
         } 
 
 
-        // if ($request->time_ending > $request->time_starting){
-        //     return response()->json([
-        //         'errorMessage' => 'Time ending must be greater than time starting'
-        //     ], 400);
-        // }
+        if ($request->time_ending < $request->time_starting){
+            return response()->json([
+                'errorMessage' => 'Time ending must be greater than time starting'
+            ], 400);
+        }
+
+
+        if ($request->report == 0 && date('Y-m-d') > $request->date){
+            return response()->json([
+                'errorMessage' => 'Date must be in the future'
+            ], 400);
+        }
+
+        if ($request->report == 1 && date('Y-m-d') < $request->date){
+            return response()->json([
+                'errorMessage' => 'Date must be in the past'
+            ], 400);
+        }
+
 
         $programme = Programme::where([
             'title' => $request->title,

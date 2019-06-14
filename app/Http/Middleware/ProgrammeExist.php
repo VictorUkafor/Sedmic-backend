@@ -30,14 +30,10 @@ class ProgrammeExist
                 'errorMessage' => 'Programme could not be found'
             ], 404);
         }
+        
 
-        if($programme->church_id !== $church->id){
-            return response()->json([
-                'errorMessage' => 'Unauthorized'
-            ], 401); 
-        }
-
-        if($programme->type_of_programme == 'open' || 
+        if($programme->church_id == $church->id &&
+        $programme->type_of_meeting == 'open' || 
         $programme->created_by == $request->user->id ||
         in_array($programme->id, $handlersTo)){
 

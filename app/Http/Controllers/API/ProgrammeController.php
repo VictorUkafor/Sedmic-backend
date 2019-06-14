@@ -257,9 +257,6 @@ class ProgrammeController extends Controller
         strtolower(preg_replace('/\s+/', ' ', $request->title)) :
         $programme->title;
 
-        $programme->type_of_meeting = $request->type_of_meeting ? 
-        $request->type_of_meeting : $programme->type_of_meeting;
-
         $programme->date = $request->date ?
         $request->date : $programme->date;
 
@@ -437,6 +434,7 @@ class ProgrammeController extends Controller
 
     public function viewAll(Request $request)
     {
+
         $programmes = Programme::where([
             'church_id' => $request->church->id,
         ])->get();
@@ -735,6 +733,146 @@ class ProgrammeController extends Controller
 
     }
 
+
+    public function changeType(Request $request, EbulkSMS $sms)
+    {
+        $programme = $request->programme;
+        $programme->update([
+            'type_of_meeting' => $request->type_of_meeting,
+            'updated_by' => $request->user->id
+        ]);
+
+        if($programme) {
+            $organizer = User::find($programme->created_by);
+            $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+
+            $invitees = Invitee::where('programme_id', $programme->id)->get();
+            $inviteesId = Invitee::where('programme_id', $programme->id)->pluck('id');
+
+            $smsSender = $request->church->sms_sender_name ? 
+            $request->church->sms_sender_name : 'Sedmic';
+
+            $contact = $organizer->phone ? 
+            $organizer->phone : $organizer->email;
+
+            $closedMessage = 'Hi There! a gate pass has been sent to'.
+            ' your email. This will required at the entrance to the venue.'. 
+            'Thank you';
+
+            $openMessage = 'Hi There! This is to notify you that gate pass'.
+            ' will no longer be required. Thank you';
+
+            $meetingMSG = $request->type_of_meeting == 'closed' ?
+            $closedMessage : $openMessage;
+            
+            $message = $request->message ? 
+            $request->message : $meetingMSG;
+
+            $mail = [];
+            $programme->message = $request->message;
+            $mail['programme'] = $programme;
+            $mail['church'] = $request->church;
+
+            if($handlers && count($handlers)){
+                foreach($handlers as $id){
+                    $smsSender = $request->church->sms_sender_name ? 
+                    $request->church->sms_sender_name : 'Sedmic';
+
+                    $user = User::find($id);
+                    if($user && $user->phone){
+                        $sms->fromSender($smsSender)
+                        ->composeMessage($message)
+                        ->addRecipients($user->phone)
+                        ->send();                   
+                    }
+
+                    if($user && $user->email){
+                        $mail['user'] = $user;
+                        $user->notify(new ProgrammeSuspend($mail));                  
+                    }
+
+                }
+            }
+
+
+            if(count($invitees)){
+                foreach($invitees as $invitee){
+
+                    if($request->email_notification){
+                        
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);
+                            $mail['user'] = $member;
+                            $member->notify(new ProgrammeSuspend($mail));
+                        }
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);
+                            $mail['user'] = $slip;
+                            $slip->notify(new ProgrammeSuspend($mail));
+                        }
+
+                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                            $mail['user'] = $firstTimer;
+                            $firstTimer->notify(new ProgrammeSuspend($mail));
+                        }
+                    
+                    }
+
+
+                    if($request->sms_notification){
+
+                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
+                            $slip = Slip::find($invitee->slip_id);                                    
+                            if($slip->phone){
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($slip->phone)
+                                ->send();
+                            }
+
+                        }
+
+                        if($invitee->member_id && Member::find($invitee->member_id)){
+                            $member = Member::find($invitee->member_id);                                    
+                            if($member->phone){
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($member->phone)
+                                ->send();
+                            }
+
+                        }
+
+                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
+                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                            if($firstTimer->phone){
+                                $sms->fromSender($smsSender)
+                                ->composeMessage($message)
+                                ->addRecipients($firstTimer->phone)
+                                ->send();
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            return response()->json([
+                'successMessage' => 'meeting type changed successfully'
+            ], 201);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
 
     public function addHandlers(Request $request, EbulkSMS $sms)
     {

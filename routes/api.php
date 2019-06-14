@@ -507,7 +507,11 @@ Route::group([
                         Route::delete('/', 'ProgrammeController@cancel');
 
                         // suspend programme
-                        Route::post('/', 'ProgrammeController@suspend');
+                        Route::post('/suspend', 'ProgrammeController@suspend');
+
+                        // change type programme
+                        Route::post('/type', 'ProgrammeController@changeType')
+                        ->middleware('programmeType');
 
                         // program handler routes
                         Route::prefix('handlers')->group(function () {

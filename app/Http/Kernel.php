@@ -104,6 +104,7 @@ class Kernel extends HttpKernel
         'programmeExist' => \App\Http\Middleware\ProgrammeExist::class,
         'programmeHandlers' => \App\Http\Middleware\ProgrammeHandlers::class,
         'programmeCreator' => \App\Http\Middleware\ProgrammeCreator::class,
+        'programmeType' => \App\Http\Middleware\ProgrammeType::class,
         'validateFirstTimer' => \App\Http\Middleware\ValidateFirstTimer::class,
         'validateSlip' => \App\Http\Middleware\ValidateSlip::class,
         'unitPosition' => \App\Http\Middleware\UnitPositionExist::class,
