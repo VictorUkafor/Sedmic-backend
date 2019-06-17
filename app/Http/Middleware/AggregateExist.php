@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Aggregate;
 use Closure;
 use Validator;
 
@@ -18,8 +17,8 @@ class AggregateExist
     public function handle($request, Closure $next)
     {
         $id = $request->route('aggregate_id');
-        $church = $request->church;
-        $aggregate = Aggregate::find($id);
+        $aggregate = $request->church->aggregates()
+        ->where('id', $id)->first();
         
 
         if(!$aggregate){
@@ -28,11 +27,6 @@ class AggregateExist
             ], 404); 
         }
 
-        if($aggregate->church_id !== $church->id){
-            return response()->json([
-                'errorMessage' => 'Unauthorized'
-            ], 401); 
-        }
         
         $request->aggregate = $aggregate;
         return $next($request);

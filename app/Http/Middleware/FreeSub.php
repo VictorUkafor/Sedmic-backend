@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Aggregate;
-use App\Unit;
 use Closure;
 use Validator;
 
@@ -18,12 +16,13 @@ class FreeSub
      */
     public function handle($request, Closure $next)
     {
-        $subId = (int)$request->route('subId');
+        $subId = $request->route('subId');
         $level = $request->aggregate->level;
 
-        $sub = $level == 1 ? Unit::find($subId) : 
-        Aggregate::find($subId);
+        $unit = $request->church->units()->where('id', $id)->first();
+        $aggregate = $request->church->aggregates()->where('id', $id)->first();
 
+        $sub = $level == 1 ? $unit : $aggregate;
         
         if(!$sub){
             return response()->json([
@@ -37,14 +36,14 @@ class FreeSub
             ], 401);   
         }
 
-        if($sub->aggregate_id == NULL && $level > 1 &&
+        if($sub->aggregate_id == null && $level > 1 &&
         (!$sub->units()->count() && !$sub->subs()->count())){
             return response()->json([
                     'errorMessage' => 'Aggregate has no sub'
             ], 401);   
         }
 
-        if($sub->aggregate_id == NULL && $level == 1 && !$sub->members()->count()){
+        if($sub->aggregate_id == null && $level == 1 && !$sub->members()->count()){
             return response()->json([
                     'errorMessage' => 'Unit has no member'
             ], 401);   

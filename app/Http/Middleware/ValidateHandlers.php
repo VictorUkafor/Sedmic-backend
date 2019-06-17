@@ -24,7 +24,7 @@ class ValidateHandlers
 
             foreach($handlers as $handler){
                 $own_user = User::where(['username' => $handler])->first();
-                if(!$own_user || $own_user.church_username !==
+                if(!$own_user || $own_user->church_username !==
                  $request->church->username){
 
                     array_push($invalid_handlers, $handler);

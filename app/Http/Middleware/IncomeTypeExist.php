@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\IncomeType;
 use Closure;
 use Validator;
 
@@ -18,9 +17,11 @@ class IncomeTypeExist
     public function handle($request, Closure $next)
     {
         $id = $request->route('incomeTypeId'); 
-        $incomeType = IncomeType::find($id);
 
-        if (!$incomeType || $incomeType->church_id != $request->church->id){
+        $incomeType = $request->church->incomeTypes()
+        ->where('id', $id)->first();
+
+        if (!$incomeType){
             return response()->json([
                 'errorMessage' => "Income type can not be found"
             ], 404);

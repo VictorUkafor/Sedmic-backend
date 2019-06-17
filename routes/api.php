@@ -531,14 +531,69 @@ Route::group([
 
                     });
 
-                    Route::middleware('programmeHandlers')->group(function () {                        
-                        
-                        // // update programme
-                        // Route::put('/', 'ProgrammeController@update')
-                        // ->middleware('editProgramme');
+                    // routes for programme handlers
+                    Route::middleware('programmeHandlers')->group(function () {
 
-                        // // delete program
-                        // Route::delete('/', 'ProgrammeController@delete');
+                        // get programme invitees
+                        Route::post('/invitees', 'ProgrammeController@addInvitees')
+                        ->middleware('validateAddInvitees');
+                        
+                        // get programme invitees
+                        Route::get('/invitees', 'AttendanceController@invitees');
+
+                        // search programme invitees
+                        Route::post('/search', 'AttendanceController@search')
+                        ->middleware('validateSearch');
+
+                        // get programme attendees
+                        Route::get('/attendees', 'AttendanceController@attendees');
+
+                        // get programme absentees
+                        Route::get('/absentees', 'AttendanceController@absentees');
+                            
+                        // get programme attendee signs
+                        Route::get('/signs', 'AttendanceController@signs');
+                        
+                        // routes for single invitee
+                        Route::group([
+                            'prefix' => 'invitees/{inviteeId}',
+                            'middleware' => 'inviteeExist',
+                        ], function () {
+                            
+                            // remove programme invitee
+                            Route::delete('/', 'AttendanceController@removeInvitee')
+                            ->middleware('programmeCreator');
+
+                           // add programme attendee and signs
+                           Route::post('/signs', 'AttendanceController@addSign')
+                           ->middleware('validateValue');                           
+                           
+                           // show attendee sign
+                           Route::get('/', 'AttendanceController@invitee');
+                            
+                           // get programme attendee signs
+                           Route::get('/signs', 'AttendanceController@attendeeSigns');
+                            
+
+                            // routes for single attendee signing
+                            Route::group([
+                                'prefix' => 'signs/{signId}',
+                                'middleware' => 'signExist',
+                            ], function () {
+                                
+                                // get single sign
+                                Route::get('/', 'AttendanceController@getSign');
+
+                                // update single sign
+                                Route::put('/', 'AttendanceController@editSign');
+
+                                // remove single sign
+                                Route::delete('/', 'AttendanceController@removeSign');
+
+                            });
+
+                        });
+
 
                     });
 

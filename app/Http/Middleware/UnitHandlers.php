@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Unit;
 use Closure;
 use Validator;
 
@@ -19,7 +18,10 @@ class UnitHandlers
     {
         $id = $request->route('unit_id');
         $user = $request->user;
-        $unit = Unit::find($id);
+
+        $unit = $request->church->units()
+        ->where('id', $id)->first();
+
         $handlers = $unit->handlers.' '.$request->handlers;
         
         if($user->account_type === 'diamond' ||

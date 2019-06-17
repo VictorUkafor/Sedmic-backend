@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Income;
 use Closure;
 use Validator;
 
@@ -18,8 +17,9 @@ class IncomeExist
     public function handle($request, Closure $next)
     {
         $id = $request->route('incomeId');
-        $church = $request->church;
-        $income = Income::find($id);
+        
+        $income = $request->church->incomes()
+        ->where('id', $id)->first();
         
 
         if(!$income){
@@ -28,11 +28,6 @@ class IncomeExist
             ], 404); 
         }
 
-        if($income->church_id !== $church->id){
-            return response()->json([
-                'errorMessage' => 'Unauthorized'
-            ], 401); 
-        }
         
         $request->income = $income;
         return $next($request);

@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Programme;
 use Closure;
 use Validator;
 
@@ -63,10 +62,8 @@ class EditProgramme
             ], 400);
         }
 
-        $findProgramme = Programme::where([
-            'church_id' => $request->church->id,
-            'title' => $request->title
-        ])->first();
+        $findProgramme = $request->church->programmes()
+        ->where('title', $request->title)->first();
 
         if ($findProgramme && $findProgramme->title != $programme->title){
             return response()->json([

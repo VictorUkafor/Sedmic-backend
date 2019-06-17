@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\UnitExecutive;
-use App\Member;
 use Closure;
 use Validator;
 
@@ -18,10 +16,15 @@ class RemoveUnitPosition
      */
     public function handle($request, Closure $next)
     {
-        $unit = $request->unit;
-        $positionId = $request->route('positionId');
-        $findPosition = UnitExecutive::find($positionId);
-        $exco = $findPosition ? Member::find($findPosition->member_id) : null;
+        $id = $request->route('positionId');
+
+        $findPosition = $request->unit->executives()
+        ->where('id', $id)->first();
+
+        $member = $request->unit->members()
+        ->where('id', $findPosition->member_id)->first();
+
+        $exco = $findPosition ? $member : null;
 
         $members = [];
         
@@ -29,9 +32,10 @@ class RemoveUnitPosition
             array_push($members, $member->id);
         }
 
-        if (!$findPosition || $exco->church_id != $unit->church_id || !in_array($exco->id, $members)){
+
+        if (!$findPosition || !in_array($exco->id, $members)){
             return response()->json([
-                'errorMessage' => 'Position can not be found'
+                'errorMessage' => 'Position could not be found'
             ], 401);  
         }
 

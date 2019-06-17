@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\FirstTimer;
 use Closure;
 use Validator;
 
@@ -18,20 +17,14 @@ class FirstTimerExist
     public function handle($request, Closure $next)
     {
         $id = $request->route('firstTimerId');
-        $church = $request->church;
-        $firstTimer = FirstTimer::find($id);
+        $firstTimer = $request->church->firstTimers()
+        ->where('id', $id)->first();
         
 
         if(!$firstTimer){
             return response()->json([
-                'errorMessage' => 'First timer can not be found'
+                'errorMessage' => 'First timer could not be found'
             ], 404); 
-        }
-
-        if($firstTimer->church_id !== $church->id){
-            return response()->json([
-                'errorMessage' => 'Unauthorized'
-            ], 401); 
         }
         
         $request->firstTimer = $firstTimer;

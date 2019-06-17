@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Unit;
 use Closure;
 use Validator;
 
@@ -17,11 +16,8 @@ class UniqueUnitName
      */
     public function handle($request, Closure $next)
     {
-        $church = $request->church;
-        $unit = Unit::where([
-            'church_id' => $church->id,
-            'name' => $request->name
-        ])->first();
+        $unit = $request->church->units()
+        ->where('name', $request->name)->first();
 
         if(!$unit){
             return $next($request);

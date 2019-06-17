@@ -10,6 +10,31 @@ class Programme extends Model
 
     use SoftDeletes;
 
+    /**
+     * Get the invitees of the programme.
+     */
+    public function invitees()
+    {
+        return $this->hasMany('App\Invitee');
+    }
+
+    /**
+     * Get the signs of the programme.
+     */
+    public function signs()
+    {
+        return $this->hasMany('App\Sign');
+    }
+
+
+    /**
+     * Get the handlers of the programme.
+     */
+    public function handlers()
+    {
+        return $this->hasMany('App\Handler', 'programme_id');
+    }
+
     protected $guarded = ['id'];
 
     protected $fillable = [
@@ -30,6 +55,9 @@ class Programme extends Model
         'created_by',
         'updated_by',
         'deleted_by',
+        'created_at',
+        'updated_at',
+        'deleted_at'
     ];
 
 }

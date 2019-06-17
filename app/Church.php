@@ -25,6 +25,14 @@ class Church extends Model
     }
 
     /**
+     * Get the slips of the church.
+     */
+    public function slips()
+    {
+        return $this->hasMany('App\Slip');
+    }
+
+    /**
      * Get the units of the church.
      */
     public function units()
@@ -43,11 +51,29 @@ class Church extends Model
 
 
     /**
-     * Get the programme of the church.
+     * Get the programmes of the church.
      */
-    public function Programmes()
+    public function programmes()
     {
         return $this->hasMany('App\Programme', 'church_id');
+    }
+
+
+    /**
+     * Get the incomes of the church.
+     */
+    public function incomes()
+    {
+        return $this->hasMany('App\Income');
+    }
+
+
+    /**
+     * Get the income types of the church.
+     */
+    public function incomeTypes()
+    {
+        return $this->hasMany('App\IncomeType');
     }
 
     

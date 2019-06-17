@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-
-use App\Aggregate;
 use Closure;
 use Validator;
 
@@ -18,10 +16,8 @@ class AggregatesExist
      */
     public function handle($request, Closure $next)
     {
-        $church = $request->church;
 
-        $aggregates = Aggregate::where('church_id', $church->id)
-        ->get();
+        $aggregates = $request->church->aggregates;
         
         if(count($aggregates)){    
             $request->aggregates = $aggregates;

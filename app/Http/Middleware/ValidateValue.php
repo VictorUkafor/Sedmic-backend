@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class UnitExist
+class ValidateValue
 {
     /**
      * Handle an incoming request.
@@ -16,21 +16,18 @@ class UnitExist
      */
     public function handle($request, Closure $next)
     {
-        $id = $request->route('unit_id');
-        
-        $unit = $request->church->units()
-        ->where('id', $id)->first();
-        
+        $validator = Validator::make($request->all(), [
+            'value' => 'required',
+        ]);
 
-        if(!$unit){
+        if ($validator->fails()) {
+            $errors = $validator->errors();
             return response()->json([
-                'errorMessage' => 'Unit can not be found'
-            ], 404); 
-        }
+                'errors' => $errors
+            ], 400);
+        } 
 
-        
-        $request->unit = $unit;
         return $next($request);
-        
+
     }
 }

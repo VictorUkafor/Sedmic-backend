@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\IncomeType;
 use Closure;
 use Validator;
 
@@ -19,10 +18,8 @@ class IncomeTypeName
     {
         $name = $request->incomeType->name; 
 
-        $incomeType = IncomeType::where([
-            'church_id'=> $request->church->id,
-            'name' => $request->name
-        ])->first();
+        $incomeType = $request->church->incomeTypes()
+        ->where('name', $request->name)->first();
 
         if ($incomeType && $incomeType->name != $name){
             return response()->json([

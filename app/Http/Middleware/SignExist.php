@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class MemberExist
+class SignExist
 {
     /**
      * Handle an incoming request.
@@ -16,18 +16,18 @@ class MemberExist
      */
     public function handle($request, Closure $next)
     {
-        $id = $request->route('member_id');
-        $member = $request->church->members()
+        $id = $request->route('signId');
+        $sign = $request->invitee->signs()
         ->where('id', $id)->first();
-
         
-        if(!$member){
+        if (!$sign){
             return response()->json([
-                'errorMessage' => 'Member can not found'
-            ], 404);           
+                'errorMessage' => 'Sign could not be found'
+            ], 404);
         }
         
-        $request->member = $member;
-        return $next($request);           
+        $request->sign = $sign;
+        return $next($request);
+
     }
 }

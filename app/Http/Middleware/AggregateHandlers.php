@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Aggregate;
 use Closure;
 use Validator;
 
@@ -19,7 +18,10 @@ class AggregateHandlers
     {
         $id = $request->route('aggregate_id');
         $user = $request->user;
-        $aggregate = Aggregate::find($id);
+
+        $aggregate = $request->church->aggregates()
+        ->where('id', $id)->first();
+        
         $handlers = $aggregate->handlers.' '.$request->handlers;
         
         if($user->account_type === 'diamond' ||

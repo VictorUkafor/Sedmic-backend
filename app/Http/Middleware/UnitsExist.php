@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-
-use App\Unit;
 use Closure;
 use Validator;
 
@@ -18,12 +16,8 @@ class UnitsExist
      */
     public function handle($request, Closure $next)
     {
-        $church = $request->church;
+        $units = $request->church->units;
 
-        $units = Unit::where('church_id', $church->id)
-        ->get();
-
-        
         if(count($units)){    
             $request->units = $units;
             return $next($request);

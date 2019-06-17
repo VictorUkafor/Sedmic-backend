@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Aggregate;
 use Closure;
 use Validator;
 
@@ -17,11 +16,8 @@ class UniqueAggregateName
      */
     public function handle($request, Closure $next)
     {
-        $church = $request->church;
-        $aggregate = Aggregate::where([
-            'church_id' => $church->id,
-            'name' => $request->name
-        ])->first();
+        $aggregate = $request->church->aggregates()
+        ->where('name', $request->name)->first();
 
         if(!$aggregate){
             return $next($request);

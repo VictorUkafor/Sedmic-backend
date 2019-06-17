@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Handler;
 use Closure;
 use Validator;
 
@@ -17,21 +16,26 @@ class ProgrammeHandlerExist
      */
     public function handle($request, Closure $next)
     {
-        $id = $request->route('userId');
-        $handlers = Handler::where('programme_id',$request->programme->id)
-        ->pluck('user_id');
+        $userId = $request->route('userId');
+        $handlers = $request->programme->handlers()
+        ->pluck('user_id')->toArray();
 
 
-        if(!in_array($id, $handlers->toArray()) || $id == $request->programme->created_by){
+        if(!in_array($userId, $handlers)){
             return response()->json([
                 'errorMessage' => 'Handler could not be found'
             ], 404);     
         }
+
+
+        if($userId == $request->programme->created_by){
+            return response()->json([
+                'errorMessage' => 'Unauthorized'
+            ], 401);     
+        }
         
-        $handlerId =  Handler::where([
-            'programme_id' => $request->programme->id ,
-            'user_id' => $id
-        ])->first()->id;
+        $handlerId =  $request->programme->handlers()
+        ->where('user_id', $userId)->first()->id;
 
         $request->handlerId = $handlerId;
         return $next($request);

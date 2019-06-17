@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\UnitExecutive;
-use App\Member;
 use Closure;
 use Validator;
 
@@ -18,15 +16,14 @@ class UnitPositionExist
      */
     public function handle($request, Closure $next)
     {
-        $unit = $request->unit;
         $memberId = $request->member;
         $position = $request->position;
-        $exco = Member::find($memberId);
 
-        $findPosition = UnitExecutive::where([
-            'unit_id' => $unit->id,
-            'position' => $position
-        ])->first();
+        $exco = $request->unit->members()
+        ->where('id', $memberId)->first();
+
+        $findPosition = $request->unit->executives()
+        ->where('position', $position)->first();
 
         $members = [];
         
@@ -35,7 +32,7 @@ class UnitPositionExist
         }
 
 
-        if (!$exco || $exco->church_id != $unit->church_id || !in_array($exco->id, $members)){
+        if (!$exco || !in_array($exco->id, $members)){
             return response()->json([
                 'errorMessage' => 'Member can not be found'
             ], 404);  

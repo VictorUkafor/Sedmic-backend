@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\AggregateExecutive;
-use App\Member;
 use Closure;
 use Validator;
 
@@ -18,10 +16,15 @@ class RemoveAggregatePosition
      */
     public function handle($request, Closure $next)
     {
-        $aggregate = $request->aggregate;
-        $positionId = $request->route('positionId');
-        $findPosition = AggregateExecutive::find($positionId);
-        $exco = $findPosition ? Member::find($findPosition->member_id) : null;
+        $id = $request->route('positionId');
+
+        $findPosition = $request->aggregate->executives()
+        ->where('id', $id)->first();
+
+        $member = $request->church->members()
+        ->where('id', $findPosition->member_id)->first();
+
+        $exco = $findPosition ? $member : null;
 
         $members = [];
         
@@ -45,7 +48,7 @@ class RemoveAggregatePosition
             }
         }
 
-        if (!$findPosition || $exco->church_id != $unit->church_id || !in_array($exco->id, $members)){
+        if (!$findPosition || !in_array($exco->id, $members)){
             return response()->json([
                 'errorMessage' => 'Position can not be found'
             ], 401);  

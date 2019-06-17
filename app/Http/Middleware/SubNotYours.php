@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Aggregate;
-use App\Unit;
 use Closure;
 use Validator;
 
@@ -18,11 +16,16 @@ class SubNotYours
      */
     public function handle($request, Closure $next)
     {
-        $subId = (int)$request->route('subId');
+        $subId = $request->route('subId');
         $level = $request->aggregate->level;
 
-        $sub = $level == 1 ? Unit::find($subId) : 
-        Aggregate::find($subId);
+        $unit = $request->church->units()
+        ->where('id', $subId)->first();
+
+        $aggregate = $request->church->aggregates()
+        ->where('id', $subId)->first();
+
+        $sub = $level == 1 ? $unit : $aggregate;
 
         
         if(!$sub){
@@ -33,7 +36,7 @@ class SubNotYours
 
         if($sub->aggregate_id != $request->aggregate->id){
             return response()->json([
-                    'errorMessage' => 'Sub does not belong to you'
+                    'errorMessage' => 'Unauthorized'
             ], 401);   
         }
 

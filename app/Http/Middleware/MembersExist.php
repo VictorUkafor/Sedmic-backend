@@ -2,9 +2,6 @@
 
 namespace App\Http\Middleware;
 
-
-use App\Member;
-use App\Church;
 use Closure;
 use Validator;
 
@@ -19,20 +16,16 @@ class MembersExist
      */
     public function handle($request, Closure $next)
     {
-        $user = auth()->user();
-        $church = Church::where('username', $user->church_username)
-        ->first();
 
-        $members = Member::where('church_id', $church->id)
-        ->first();
-
+        $members = $request->church->members;
         
-        if(!$members){
+        if(!count($members)){
             return response()->json([
-                'errorMessage' => 'Members can not found'
+                'errorMessage' => 'Members could not be found'
             ], 404);           
         }
         
+        $request->members = $members;
         return $next($request);           
     }
 }

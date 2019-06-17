@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class MemberExist
+class InviteeExist
 {
     /**
      * Handle an incoming request.
@@ -16,18 +16,18 @@ class MemberExist
      */
     public function handle($request, Closure $next)
     {
-        $id = $request->route('member_id');
-        $member = $request->church->members()
+        $id = $request->route('inviteeId');
+        $invitee = $request->programme->invitees()
         ->where('id', $id)->first();
-
         
-        if(!$member){
+        if (!$invitee){
             return response()->json([
-                'errorMessage' => 'Member can not found'
-            ], 404);           
+                'errorMessage' => 'Invitee could not be found'
+            ], 404);
         }
         
-        $request->member = $member;
-        return $next($request);           
+        $request->invitee = $invitee;
+        return $next($request);
+
     }
 }

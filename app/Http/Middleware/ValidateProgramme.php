@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Programme;
 use Closure;
 use Validator;
 
@@ -54,10 +53,8 @@ class ValidateProgramme
         }
 
 
-        $programme = Programme::where([
-            'title' => $request->title,
-            'church_id' => $request->church->id,
-        ])->first();
+        $programme = $request->church->programmes()
+        ->where('title', $request->title)->first();
 
         if ($programme){
             return response()->json([

@@ -64,6 +64,7 @@ class ProgrammeController extends Controller
                 'programme_id' => $programme->id, 
                 'user_id' => $request->user->id,
                 'created_by' => $request->user->id,
+                'created_at' => date('Y-m-d h:m:s')
             ]);
             
 
@@ -235,7 +236,6 @@ class ProgrammeController extends Controller
             
             return response()->json([
                 'successMessage' => 'Programme created successfully',
-                'programme' => $programme
             ], 201);  
 
         }
@@ -246,7 +246,6 @@ class ProgrammeController extends Controller
         ], 500);
 
     }
-
 
 
     public function update(Request $request, EbulkSMS $sms)
@@ -435,16 +434,13 @@ class ProgrammeController extends Controller
     public function viewAll(Request $request)
     {
 
-        $programmes = Programme::where([
-            'church_id' => $request->church->id,
-        ])->get();
-
+        $programmes = $request->church->programmes;
 
         if(!count($programmes)) {
             return response()->json([
                 'errorMessage' => 'Programmes can not be found'
             ], 404);
-        }
+        } 
 
         if($programmes) {
             return response()->json([
@@ -459,17 +455,33 @@ class ProgrammeController extends Controller
     }
 
 
-    public function cancel(Request $request, EbulkSMS $sms, $programmeId)
+    public function cancel(Request $request, EbulkSMS $sms)
     {
         $programme = $request->programme;
+
+        if($programme->signs){
+            return response()->json([
+                'errorMessage' => 'Programme can not be deleted'
+            ], 401);
+        }
 
         $programme->update([
             'deleted_by' => $request->user->id
         ]);
 
-        $deleteProgramme = Programme::destroy($programmeId);
+        $deleteProgramme = Programme::destroy($programme->id);
 
-        if($programme && $deleteProgramme) {
+        if($deleteProgramme && count($programme->invitees)){
+            $programme->invitees()->update([
+                'deleted_by' => $request->user->id,
+            ]); 
+
+            Invitee::destroy($programme->invitees()
+            ->pluck('id')->toArray());
+        }
+
+
+        if($deleteProgramme) {
             $organizer = User::find($programme->created_by);
 
             $handlers = Handler::where('programme_id', $programmeId)->pluck('user_id');
@@ -873,6 +885,171 @@ class ProgrammeController extends Controller
         ], 500);
 
     }
+
+
+    // add invitees
+    public function addInvitees(Request $request, EbulkSMS $sms)
+    {
+        $programme = $request->programme;
+
+        $invitees = json_decode(json_encode($request->invitees), true);
+        $invitees = json_decode($invitees, true);
+
+        $organizer = User::find($programme->created_by);
+
+        $smsSender = $request->church->sms_sender_name ? 
+        $request->church->sms_sender_name : 'Sedmic';
+
+        $contact = $organizer->phone ? 
+        $organizer->phone : $organizer->email;
+
+        $message = $request->message ? $request->message : 
+        'Hi There! You\'ve been invited to attend '.
+        $programme->title.'('.$request->church->name_of_church.') taking place at '.
+        $programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
+        '. We\'ll be expecting you. You may reachout to '.$organizer->full_name.', '.
+        $contact.' for more info.  God bless you!';
+
+        $programme->message = $request->message;
+
+        $mail = [];
+        $mail['programme'] = $programme;
+        $mail['church'] = $request->church;
+
+        if($invitees && $invitees['members']){
+            foreach($invitees['members'] as $memberId){
+                $member = Member::find($memberId);
+
+                if($member){
+                    DB::table('invitees')->insert([
+                        'programme_id' => $programme->id,
+                        'member_id' => $member->id,
+                        'first_name' => $member->first_name,
+                        'last_name' => $member->last_name,                            
+                        'image' => $member->image,
+                        'created_by' => $request->user->id,
+                        'created_at' => date('Y-m-d h:m:s')
+                    ]);
+
+
+                    if($request->invitation_on_creation){
+
+                        if($programme->email_notification && $member->email){
+                            $mail['user'] = $member;
+                            $member->notify(new ProgrammeInvitation($mail));
+                        }
+
+                        if($programme->sms_notification && $member->phone){
+                           $sms->fromSender($smsSender)
+                           ->composeMessage($message)
+                           ->addRecipients($member->phone)
+                           ->send();
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if($invitees && $invitees['slips']){
+            foreach($invitees['slips'] as $slipId){
+                $slip = Slip::find($slipId);
+
+                if($slip){
+                    DB::table('invitees')->insert([
+                        'programme_id' => $programme->id,
+                        'slip_id' => $slip->id,
+                        'first_name' => $slip->first_name,
+                        'last_name' => $slip->last_name,                            
+                        'image' => $slip->image,
+                        'created_by' => $request->user->id,
+                        'created_at' => date('Y-m-d h:m:s')
+                    ]);
+
+
+                    if($request->invitation_on_creation){
+
+                        if($programme->email_notification && $slip->email){
+                            $mail['user'] = $slip;
+                            $slip->notify(new ProgrammeInvitation($mail));
+                        }
+
+                        if($programme->sms_notification && $slip->phone){
+                           $sms->fromSender($smsSender)
+                           ->composeMessage($message)
+                           ->addRecipients($slip->phone)
+                           ->send();
+                        }
+                    }
+                
+                }
+            
+            }
+        
+        }
+
+
+        if($invitees && $invitees['firstTimers']){
+            foreach($invitees['firstTimers'] as $firstTimerId){
+                $firstTimer = FirstTimer::find($firstTimerId);
+
+                if($firstTimer){
+                    DB::table('invitees')->insert([
+                        'programme_id' => $programme->id,
+                        'first_timer_id' => $firstTimer->id,
+                        'first_name' => $firstTimer->first_name,
+                        'last_name' => $firstTimer->last_name,                            
+                        'image' => $firstTimer->image,
+                        'created_by' => $request->user->id,
+                        'created_at' => date('Y-m-d h:m:s')
+                    ]);
+
+
+                    if($request->invitation_on_creation){
+
+                        if($programme->email_notification && $firstTimer->email){
+                            $mail['user'] = $firstTimer;
+                            $firstTimer->notify(new ProgrammeInvitation($mail));
+                        }
+
+                        if($programme->sms_notification && $firstTimer->phone){
+                           $sms->fromSender($smsSender)
+                           ->composeMessage($message)
+                           ->addRecipients($firstTimer->phone)
+                           ->send();
+                        }
+                    }
+                
+                }
+            
+            }
+        
+        }
+        
+
+        if(!$invitees['members'] && 
+        !$invitees['firstTimers'] &&
+        !$invitees['slips']) {
+            return response()->json([
+                'successMessage' => 'No invitee were added',
+            ], 201);  
+        }
+
+
+       if($invitees) {
+            return response()->json([
+                'successMessage' => 'Invitee(s) added successfully',
+            ], 201);  
+
+        }        
+        
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
 
     public function addHandlers(Request $request, EbulkSMS $sms)
     {

@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\AggregateExecutive;
-use App\Member;
 use Closure;
 use Validator;
 
@@ -18,15 +16,12 @@ class AggregatePositionExist
      */
     public function handle($request, Closure $next)
     {
-        $aggregate = $request->aggregate;
-        $memberId = $request->member;
         $position = $request->position;
-        $exco = Member::find($memberId);
+        $exco = $request->church->members()
+        ->where('id', $request->member)->first();
 
-        $findPosition = AggregateExecutive::where([
-            'aggregate_id' => $aggregate->id,
-            'position' => $position
-        ])->first();
+        $findPosition = $request->aggregate->executives()
+        ->where('position', $position)->first();
 
         $members = [];
 
@@ -50,7 +45,8 @@ class AggregatePositionExist
             }
         }
 
-        if (!$exco || $exco->church_id != $aggregate->church_id || !in_array($exco->id, $members)){
+
+        if (!$exco || !in_array($exco->id, $members)){
             return response()->json([
                 'errorMessage' => 'Member can not be found'
             ], 404);  

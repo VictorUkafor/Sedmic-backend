@@ -10,6 +10,14 @@ class Invitee extends Model
 {
     use Notifiable, SoftDeletes;
 
+    /**
+     * Get the signs of the Invitee.
+     */
+    public function signs()
+    {
+        return $this->hasMany('App\Sign', 'invitee_id');
+    }
+
     protected $guarded = ['id'];
 
     protected $fillable = [
