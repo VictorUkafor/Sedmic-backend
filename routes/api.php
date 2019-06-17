@@ -512,6 +512,19 @@ Route::group([
                         // change type programme
                         Route::post('/type', 'ProgrammeController@changeType')
                         ->middleware('programmeType');
+                        
+                        // routes for programme services
+                        Route::prefix('services')->group(function (){
+                            
+                            // create service
+                            Route::post('/', 'ServiceController@create')
+                            ->middleware('validateService');
+
+                            // view a single service
+                            Route::delete('/{serviceId}', 'ServiceController@delete')
+                            ->middleware('serviceExist');
+
+                        });
 
                         // program handler routes
                         Route::prefix('handlers')->group(function () {
@@ -553,6 +566,14 @@ Route::group([
                             
                         // get programme attendee signs
                         Route::get('/signs', 'AttendanceController@signs');
+
+                        // view all services
+                        Route::get('/services', 'ServiceController@viewAll');
+
+                        // view a single service
+                        Route::get('/services/{serviceId}', 'ServiceController@show')
+                        ->middleware('serviceExist');
+                                                   
                         
                         // routes for single invitee
                         Route::group([

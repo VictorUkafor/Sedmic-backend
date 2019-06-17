@@ -116,7 +116,8 @@ class ProgrammeController extends Controller
             $programme->venue.' on '.$programme->date.' by '.$programme->time_starting.
             '. We\'ll be expecting you. You may reachout to '.$organizer->full_name.', '.
             $contact.' for more info.  God bless you!';
-            
+
+
             if($invitees && $invitees['members']){
                     foreach($invitees['members'] as $memberId){
                         $member = Member::find($memberId);

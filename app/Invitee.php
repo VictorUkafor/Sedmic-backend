@@ -10,6 +10,15 @@ class Invitee extends Model
 {
     use Notifiable, SoftDeletes;
 
+
+    /**
+     * Get the anchors of the Invitee.
+     */
+    public function anchors()
+    {
+        return $this->hasMany('App\OrderOfService', 'invitee_id');
+    }
+
     /**
      * Get the signs of the Invitee.
      */

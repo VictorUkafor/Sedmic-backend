@@ -35,6 +35,15 @@ class Programme extends Model
         return $this->hasMany('App\Handler', 'programme_id');
     }
 
+
+    /**
+     * Get the order of service of the programme.
+     */
+    public function orderOfServices()
+    {
+        return $this->hasMany('App\OrderOfService');
+    }
+
     protected $guarded = ['id'];
 
     protected $fillable = [
