@@ -128,6 +128,8 @@ class Kernel extends HttpKernel
         'notMember' => \App\Http\Middleware\NotMember::class,
         'freeSub' => \App\Http\Middleware\FreeSub::class,
         'unitMembers' => \App\Http\Middleware\UnitMembers::class,
+        'gappingService' => \App\Http\Middleware\GappingService::class,
+        'fixServiceGap' => \App\Http\Middleware\FixServiceGap::class,
         'aggregateMembers' => \App\Http\Middleware\AggregateMembers::class,
         'addHandlers' => \App\Http\Middleware\AddHandlers::class,
         'programmeHandlerExist' => \App\Http\Middleware\ProgrammeHandlerExist::class,

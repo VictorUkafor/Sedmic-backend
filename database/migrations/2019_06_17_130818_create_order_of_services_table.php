@@ -22,6 +22,8 @@ class CreateOrderOfServicesTable extends Migration
             $table->time('end_time');
             $table->time('actual_start')->nullable();
             $table->time('actual_end')->nullable();
+            $table->integer('duration');
+            $table->integer('order');
             $table->text('instruction')->nullable();
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();

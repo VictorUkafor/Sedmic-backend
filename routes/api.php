@@ -513,16 +513,37 @@ Route::group([
                         Route::post('/type', 'ProgrammeController@changeType')
                         ->middleware('programmeType');
                         
-                        // routes for programme services
-                        Route::prefix('services')->group(function (){
-                            
-                            // create service
-                            Route::post('/', 'ServiceController@create')
-                            ->middleware('validateService');
 
-                            // view a single service
-                            Route::delete('/{serviceId}', 'ServiceController@delete')
-                            ->middleware('serviceExist');
+                        // routes for programme services
+                        Route::prefix('services')->group(function () {
+
+                            Route::middleware('gappingService')->group(function () {
+                                
+                                // create service
+                                Route::post('/', 'ServiceController@create')
+                                ->middleware('validateService');
+
+                                // view a single service
+                                Route::delete('/{serviceId}', 'ServiceController@delete')
+                                ->middleware('serviceExist');
+                            
+                            });
+
+                            Route::middleware('fixServiceGap')->group(function () {
+                                
+                                // show service gaps
+                                Route::get('/gaps', 'ServiceController@gaps');
+
+                                // show single service gaps
+                                Route::get('/gaps/{gapId}', 'ServiceController@gap');
+
+                                // fix gaps
+                                Route::post('/fix', 'ServiceController@fixGap');
+
+                                // squash gaps
+                                Route::post('/squash', 'ServiceController@squash');
+                            
+                            });
 
                         });
 
@@ -567,14 +588,20 @@ Route::group([
                         // get programme attendee signs
                         Route::get('/signs', 'AttendanceController@signs');
 
-                        // view all services
-                        Route::get('/services', 'ServiceController@viewAll');
+                        Route::group([
+                            'prefix' => 'services',
+                            'middleware' => 'gappingService',
+                        ], function () {
+                            
+                            // view all services
+                            Route::get('/', 'ServiceController@viewAll');
 
-                        // view a single service
-                        Route::get('/services/{serviceId}', 'ServiceController@show')
-                        ->middleware('serviceExist');
-                                                   
-                        
+                            // view a single service
+                            Route::get('/{serviceId}', 'ServiceController@show')
+                            ->middleware('serviceExist');                              
+
+                        });
+
                         // routes for single invitee
                         Route::group([
                             'prefix' => 'invitees/{inviteeId}',
@@ -595,7 +622,6 @@ Route::group([
                            // get programme attendee signs
                            Route::get('/signs', 'AttendanceController@attendeeSigns');
                             
-
                             // routes for single attendee signing
                             Route::group([
                                 'prefix' => 'signs/{signId}',
@@ -615,15 +641,11 @@ Route::group([
 
                         });
 
-
                     });
-
 
                 });
 
-
             });
-
         
         });
     

@@ -30,7 +30,7 @@ class ValidateService
         } 
 
         $lastService = $request->programme->orderOfServices()
-        ->latest()->first();
+        ->orderBy('order', 'desc')->get()->first();
 
         $programmeStart = $request->programme->time_starting;
 
@@ -43,6 +43,15 @@ class ValidateService
         $anchorIsInvited = $request->programme->invitees ? 
         $request->programme->invitees()->where('id', $request->anchor)
         ->first() : null;
+
+        $serviceExist  =  $request->programme->orderOfServices()
+        ->where('title', $request->title)->first();
+
+        if($serviceExist){
+            return response()->json([
+                'errorMessage' => 'Service already exist'
+            ], 400); 
+        }
 
         if(!$anchorIsInvited){
             return response()->json([

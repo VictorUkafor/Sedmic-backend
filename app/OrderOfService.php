@@ -25,6 +25,8 @@ class OrderOfService extends Model
         'end_time',
         'actual_start',
         'actual_end',
+        'duration',
+        'order',
         'instruction',
         'created_by',
         'updated_by',
