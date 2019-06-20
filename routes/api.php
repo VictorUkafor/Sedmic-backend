@@ -523,6 +523,10 @@ Route::group([
                                 Route::post('/', 'ServiceController@create')
                                 ->middleware('validateService');
 
+                                // update service
+                                Route::put('/{serviceId}', 'ServiceController@update')
+                                ->middleware(['serviceExist', 'validateUpdateService']);
+
                                 // view a single service
                                 Route::delete('/{serviceId}', 'ServiceController@delete')
                                 ->middleware('serviceExist');
@@ -538,7 +542,7 @@ Route::group([
                                 Route::get('/gaps/{gapId}', 'ServiceController@gap');
 
                                 // fix gaps
-                                Route::post('/fix', 'ServiceController@fixGap');
+                                Route::post('/restore', 'ServiceController@restoreServices');
 
                                 // squash gaps
                                 Route::post('/squash', 'ServiceController@squash');

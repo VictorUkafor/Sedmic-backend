@@ -107,6 +107,7 @@ class Kernel extends HttpKernel
         'validateProgramme' => \App\Http\Middleware\ValidateProgramme::class,
         'validateAddInvitees' => \App\Http\Middleware\ValidateAddInvitees::class,
         'validateSearch' => \App\Http\Middleware\ValidateSearch::class,
+        'validateUpdateService' => \App\Http\Middleware\ValidateUpdateService::class,
         'editProgramme' => \App\Http\Middleware\EditProgramme::class,
         'programmeExist' => \App\Http\Middleware\ProgrammeExist::class,
         'programmeHandlers' => \App\Http\Middleware\ProgrammeHandlers::class,

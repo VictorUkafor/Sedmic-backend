@@ -2,13 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Programme;
-use App\Member;
-use App\FirstTimer;
-use App\Slip;
-use App\Handler;
-use App\Invitee;
-use App\User;
+use App;
 use App\Notifications\ProgrammeInvitation;
 use App\Notifications\ProgrammeChange;
 use App\Notifications\ProgrammeCancel;
@@ -30,7 +24,7 @@ class ProgrammeController extends Controller
         $handlers = json_decode(json_encode($request->handlers), true);
         $handlers = json_decode($handlers, true);
 
-        $programme = new Programme;
+        $programme = new App\Programme;
         $programme->church_id = $request->church->id;
         $programme->title = strtolower(preg_replace('/\s+/', ' ', $request->title));
         $programme->type_of_meeting = $request->type_of_meeting;
@@ -49,7 +43,7 @@ class ProgrammeController extends Controller
 
         if($programme->save()) {
 
-            $organizer = User::find($programme->created_by);
+            $organizer = App\User::find($programme->created_by);
 
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
@@ -70,9 +64,9 @@ class ProgrammeController extends Controller
 
             if($handlers && count($handlers)){
                 foreach($handlers as $id){
-                    $user = User::find($id);
+                    $user = App\User::find($id);
 
-                    $handler = Handler::where([
+                    $handler = App\Handler::where([
                         'programme_id' => $programme->id,
                         'user_id' => $id
                     ])->first();
@@ -120,7 +114,7 @@ class ProgrammeController extends Controller
 
             if($invitees && $invitees['members']){
                     foreach($invitees['members'] as $memberId){
-                        $member = Member::find($memberId);
+                        $member = App\Member::find($memberId);
 
                         if($member){
                             DB::table('invitees')->insert([
@@ -159,7 +153,7 @@ class ProgrammeController extends Controller
 
             if($invitees && $invitees['slips']){
                 foreach($invitees['slips'] as $slipId){
-                    $slip = Slip::find($slipId);
+                    $slip = App\Slip::find($slipId);
 
                     if($slip){
                         DB::table('invitees')->insert([
@@ -198,7 +192,7 @@ class ProgrammeController extends Controller
 
             if($invitees && $invitees['firstTimers']){
                 foreach($invitees['firstTimers'] as $firstTimerId){
-                    $firstTimer = FirstTimer::find($firstTimerId);
+                    $firstTimer = App\FirstTimer::find($firstTimerId);
 
                     if($firstTimer){
                         DB::table('invitees')->insert([
@@ -289,10 +283,10 @@ class ProgrammeController extends Controller
             ($request->venue && $request->venue != $programme->venue)){
 
 
-                $organizer = User::find($programme->created_by);
-                $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+                $organizer = App\User::find($programme->created_by);
+                $handlers = App\Handler::where('programme_id', $programme->id)->pluck('user_id');
                 $handlers = $handlers->toArray();
-                $invitees = Invitee::where('programme_id', $programme->id)->get();
+                $invitees = App\Invitee::where('programme_id', $programme->id)->get();
 
                 $smsSender = $request->church->sms_sender_name ? 
                 $request->church->sms_sender_name : 'Sedmic';
@@ -316,7 +310,7 @@ class ProgrammeController extends Controller
                 if($handlers && count($handlers)){
                     foreach($handlers as $id){
     
-                        $user = User::find($id);
+                        $user = App\User::find($id);
                         if($user && $user->phone){
                             $sms->fromSender($smsSender)
                             ->composeMessage($message)
@@ -337,20 +331,20 @@ class ProgrammeController extends Controller
                         foreach($invitees as $invitee){
                             if($request->email_notification){
                                 
-                                if($invitee->member_id && Member::find($invitee->member_id)){
-                                    $member = Member::find($invitee->member_id);
+                                if($invitee->member_id && App\Member::find($invitee->member_id)){
+                                    $member = App\Member::find($invitee->member_id);
                                     $mail['user'] = $member;
                                     $member->notify(new ProgrammeChange($mail));
                                 }
 
-                                if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                                    $slip = Slip::find($invitee->slip_id);
+                                if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                                    $slip = App\Slip::find($invitee->slip_id);
                                     $mail['user'] = $slip;
                                     $slip->notify(new ProgrammeChange($mail));
                                 }
 
-                                if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
-                                    $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                                if($invitee->first_timer_id && App\FirstTimer::find($invitee->first_timer_id)){
+                                    $firstTimer = App\FirstTimer::find($invitee->first_timer_id);
                                     $mail['user'] = $firstTimer;
                                     $firstTimer->notify(new ProgrammeChange($mail));
                                 }
@@ -360,8 +354,8 @@ class ProgrammeController extends Controller
 
                             if($request->sms_notification){
 
-                                if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                                    $slip = Slip::find($invitee->slip_id);                                    
+                                if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                                    $slip = App\Slip::find($invitee->slip_id);                                    
                                     if($slip->phone){
                                         $sms->fromSender($smsSender)
                                         ->composeMessage($message)
@@ -371,8 +365,8 @@ class ProgrammeController extends Controller
 
                                 }
 
-                                if($invitee->member_id && Member::find($invitee->member_id)){
-                                    $member = Member::find($invitee->member_id);                                    
+                                if($invitee->member_id && App\Member::find($invitee->member_id)){
+                                    $member = App\Member::find($invitee->member_id);                                    
                                     if($member->phone){
                                         $sms->fromSender($smsSender)
                                         ->composeMessage($message)
@@ -382,8 +376,8 @@ class ProgrammeController extends Controller
 
                                 }
 
-                                if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
-                                    $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                                if($invitee->first_timer_id && App\Member::find($invitee->first_timer_id)){
+                                    $firstTimer = App\FirstTimer::find($invitee->first_timer_id);                                    
                                     if($firstTimer->phone){
                                         $sms->fromSender($smsSender)
                                         ->composeMessage($message)
@@ -470,26 +464,26 @@ class ProgrammeController extends Controller
             'deleted_by' => $request->user->id
         ]);
 
-        $deleteProgramme = Programme::destroy($programme->id);
+        $deleteProgramme = App\Programme::destroy($programme->id);
 
         if($deleteProgramme && count($programme->invitees)){
             $programme->invitees()->update([
                 'deleted_by' => $request->user->id,
             ]); 
 
-            Invitee::destroy($programme->invitees()
+            App\Invitee::destroy($programme->invitees()
             ->pluck('id')->toArray());
         }
 
 
         if($deleteProgramme) {
-            $organizer = User::find($programme->created_by);
+            $organizer = App\User::find($programme->created_by);
 
-            $handlers = Handler::where('programme_id', $programmeId)->pluck('user_id');
+            $handlers = App\Handler::where('programme_id', $programmeId)->pluck('user_id');
             $handlerIds = Handler::where('programme_id', $programmeId)->pluck('id');
 
-            $invitees = Invitee::where('programme_id', $programmeId)->get();
-            $inviteesId = Invitee::where('programme_id', $programmeId)->pluck('id');
+            $invitees = App\Invitee::where('programme_id', $programmeId)->get();
+            $inviteesId = App\Invitee::where('programme_id', $programmeId)->pluck('id');
 
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
@@ -513,7 +507,7 @@ class ProgrammeController extends Controller
             if($handlers && count($handlers)){
                 foreach($handlers as $id){
 
-                    $user = User::find($id);
+                    $user = App\User::find($id);
                     if($user && $user->phone){
                         $sms->fromSender($smsSender)
                         ->composeMessage($message)
@@ -533,20 +527,20 @@ class ProgrammeController extends Controller
             if(count($invitees)){
                 foreach($invitees as $invitee){
                     if($request->email_notification){    
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);
                             $mail['user'] = $member;
                             $member->notify(new ProgrammeCancel($mail));
                         }
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);
                             $mail['user'] = $slip;
                             $slip->notify(new ProgrammeCancel($mail));
                         }
 
-                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                        if($invitee->first_timer_id && App\FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);
                             $mail['user'] = $firstTimer;
                             $firstTimer->notify(new ProgrammeCancel($mail));
                         }
@@ -556,8 +550,8 @@ class ProgrammeController extends Controller
 
                     if($request->sms_notification){
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);                                    
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);                                    
                             if($slip->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -567,8 +561,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);                                    
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);                                    
                             if($member->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -578,8 +572,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                        if($invitee->first_timer_id && App\Member::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);                                    
                             if($firstTimer->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -596,8 +590,8 @@ class ProgrammeController extends Controller
             }
 
 
-            Handler::destroy($handlerIds->toArray());
-            Invitee::destroy($inviteesId->toArray());
+            App\Handler::destroy($handlerIds->toArray());
+            App\Invitee::destroy($inviteesId->toArray());
 
 
             return response()->json([
@@ -621,11 +615,11 @@ class ProgrammeController extends Controller
         ]);
 
         if($programme) {
-            $organizer = User::find($programme->created_by);
-            $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+            $organizer = App\User::find($programme->created_by);
+            $handlers = App\Handler::where('programme_id', $programme->id)->pluck('user_id');
 
-            $invitees = Invitee::where('programme_id', $programme->id)->get();
-            $inviteesId = Invitee::where('programme_id', $programme->id)->pluck('id');
+            $invitees = App\Invitee::where('programme_id', $programme->id)->get();
+            $inviteesId = App\Invitee::where('programme_id', $programme->id)->pluck('id');
 
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
@@ -650,7 +644,7 @@ class ProgrammeController extends Controller
                     $smsSender = $request->church->sms_sender_name ? 
                     $request->church->sms_sender_name : 'Sedmic';
 
-                    $user = User::find($id);
+                    $user = App\User::find($id);
                     if($user && $user->phone){
                         $sms->fromSender($smsSender)
                         ->composeMessage($message)
@@ -672,20 +666,20 @@ class ProgrammeController extends Controller
 
                     if($request->email_notification){
                         
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);
                             $mail['user'] = $member;
                             $member->notify(new ProgrammeSuspend($mail));
                         }
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);
                             $mail['user'] = $slip;
                             $slip->notify(new ProgrammeSuspend($mail));
                         }
 
-                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                        if($invitee->first_timer_id && App\FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);
                             $mail['user'] = $firstTimer;
                             $firstTimer->notify(new ProgrammeSuspend($mail));
                         }
@@ -695,8 +689,8 @@ class ProgrammeController extends Controller
 
                     if($request->sms_notification){
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);                                    
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);                                    
                             if($slip->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -706,8 +700,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);                                    
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);                                    
                             if($member->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -717,8 +711,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                        if($invitee->first_timer_id && App\Member::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);                                    
                             if($firstTimer->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -756,11 +750,11 @@ class ProgrammeController extends Controller
         ]);
 
         if($programme) {
-            $organizer = User::find($programme->created_by);
-            $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+            $organizer = App\User::find($programme->created_by);
+            $handlers = App\Handler::where('programme_id', $programme->id)->pluck('user_id');
 
-            $invitees = Invitee::where('programme_id', $programme->id)->get();
-            $inviteesId = Invitee::where('programme_id', $programme->id)->pluck('id');
+            $invitees = App\Invitee::where('programme_id', $programme->id)->get();
+            $inviteesId = App\Invitee::where('programme_id', $programme->id)->pluck('id');
 
             $smsSender = $request->church->sms_sender_name ? 
             $request->church->sms_sender_name : 'Sedmic';
@@ -791,7 +785,7 @@ class ProgrammeController extends Controller
                     $smsSender = $request->church->sms_sender_name ? 
                     $request->church->sms_sender_name : 'Sedmic';
 
-                    $user = User::find($id);
+                    $user = App\User::find($id);
                     if($user && $user->phone){
                         $sms->fromSender($smsSender)
                         ->composeMessage($message)
@@ -813,20 +807,20 @@ class ProgrammeController extends Controller
 
                     if($request->email_notification){
                         
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);
                             $mail['user'] = $member;
                             $member->notify(new ProgrammeSuspend($mail));
                         }
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);
                             $mail['user'] = $slip;
                             $slip->notify(new ProgrammeSuspend($mail));
                         }
 
-                        if($invitee->first_timer_id && FirstTimer::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);
+                        if($invitee->first_timer_id && App\FirstTimer::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);
                             $mail['user'] = $firstTimer;
                             $firstTimer->notify(new ProgrammeSuspend($mail));
                         }
@@ -836,8 +830,8 @@ class ProgrammeController extends Controller
 
                     if($request->sms_notification){
 
-                        if($invitee->slip_id && Slip::find($invitee->slip_id)){
-                            $slip = Slip::find($invitee->slip_id);                                    
+                        if($invitee->slip_id && App\Slip::find($invitee->slip_id)){
+                            $slip = App\Slip::find($invitee->slip_id);                                    
                             if($slip->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -847,8 +841,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->member_id && Member::find($invitee->member_id)){
-                            $member = Member::find($invitee->member_id);                                    
+                        if($invitee->member_id && App\Member::find($invitee->member_id)){
+                            $member = App\Member::find($invitee->member_id);                                    
                             if($member->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -858,8 +852,8 @@ class ProgrammeController extends Controller
 
                         }
 
-                        if($invitee->first_timer_id && Member::find($invitee->first_timer_id)){
-                            $firstTimer = FirstTimer::find($invitee->first_timer_id);                                    
+                        if($invitee->first_timer_id && App\Member::find($invitee->first_timer_id)){
+                            $firstTimer = App\FirstTimer::find($invitee->first_timer_id);                                    
                             if($firstTimer->phone){
                                 $sms->fromSender($smsSender)
                                 ->composeMessage($message)
@@ -896,7 +890,7 @@ class ProgrammeController extends Controller
         $invitees = json_decode(json_encode($request->invitees), true);
         $invitees = json_decode($invitees, true);
 
-        $organizer = User::find($programme->created_by);
+        $organizer = App\User::find($programme->created_by);
 
         $smsSender = $request->church->sms_sender_name ? 
         $request->church->sms_sender_name : 'Sedmic';
@@ -919,7 +913,7 @@ class ProgrammeController extends Controller
 
         if($invitees && $invitees['members']){
             foreach($invitees['members'] as $memberId){
-                $member = Member::find($memberId);
+                $member = App\Member::find($memberId);
 
                 if($member){
                     DB::table('invitees')->insert([
@@ -954,7 +948,7 @@ class ProgrammeController extends Controller
 
         if($invitees && $invitees['slips']){
             foreach($invitees['slips'] as $slipId){
-                $slip = Slip::find($slipId);
+                $slip = App\Slip::find($slipId);
 
                 if($slip){
                     DB::table('invitees')->insert([
@@ -992,7 +986,7 @@ class ProgrammeController extends Controller
 
         if($invitees && $invitees['firstTimers']){
             foreach($invitees['firstTimers'] as $firstTimerId){
-                $firstTimer = FirstTimer::find($firstTimerId);
+                $firstTimer = App\FirstTimer::find($firstTimerId);
 
                 if($firstTimer){
                     DB::table('invitees')->insert([
@@ -1059,16 +1053,16 @@ class ProgrammeController extends Controller
         $handlers = json_decode(json_encode($request->handlers), true);
         $handlers = json_decode($handlers, true);
 
-        $oldHandlers = Handler::where([
+        $oldHandlers = App\Handler::where([
             'programme_id' => $programme->id,
             'user_id' => $id
         ])->pluck('user_id')->toArray();
 
         foreach($handlers as $id){
 
-            $user = User::find($id);
+            $user = App\User::find($id);
 
-            $handler = Handler::where([
+            $handler = App\Handler::where([
                 'programme_id' => $programme->id,
                 'user_id' => $id
             ])->first();
@@ -1085,7 +1079,7 @@ class ProgrammeController extends Controller
         }
 
 
-        $newHandlers = Handler::where([
+        $newHandlers = App\Handler::where([
             'programme_id' => $programme->id,
             'user_id' => $id
         ])->pluck('user_id')->toArray();
@@ -1093,9 +1087,9 @@ class ProgrammeController extends Controller
 
         foreach($newHandlers as $newHandler){
             if(!in_array($newHandler, $oldHandlers)){
-                $user = User::find($newHandler);
+                $user = App\User::find($newHandler);
 
-                $organizer = User::find($programme->created_by);
+                $organizer = App\User::find($programme->created_by);
 
                 $smsSender = $request->church->sms_sender_name ? 
                 $request->church->sms_sender_name : 'Sedmic';
@@ -1143,7 +1137,7 @@ class ProgrammeController extends Controller
     public function getHandlers(Request $request)
     {
         $programme = $request->programme;
-        $handlers = Handler::where('programme_id', $programme->id)->pluck('user_id');
+        $handlers = App\Handler::where('programme_id', $programme->id)->pluck('user_id');
 
         if($handlers) {
             return response()->json([
@@ -1160,7 +1154,7 @@ class ProgrammeController extends Controller
 
     public function removeHandler(Request $request)
     {
-        $deleteHandler = Handler::destroy($request->handlerId);
+        $deleteHandler = App\Handler::destroy($request->handlerId);
 
         if($deleteHandler) {
             return response()->json([

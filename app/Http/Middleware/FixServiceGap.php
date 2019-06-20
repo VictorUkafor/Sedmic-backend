@@ -36,14 +36,14 @@ class FixServiceGap
                     $gaps[] = [
                         'start_time' => $services[$x]['end_time'],
                         'end_time' => $services[$x+1]['start_time'],
-                        'order' => $x
+                        'order' => $x+2
                     ];
                 }
         }
 
         if(!count($gaps)){
             return response()->json([
-                'errorMessage' => 'No gaps to fix'
+                'errorMessage' => 'There are no service gaps'
             ], 404);
         }
             

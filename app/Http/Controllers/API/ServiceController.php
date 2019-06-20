@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\API;
 
-use App\OrderOfService;
+use App;
 use Illuminate\Http\Request;
+use App\Notifications\ServiceCreate;
+use therealsmat\Ebulksms\EbulkSMS;
 use App\Http\Controllers\Controller;
 
 class ServiceController extends Controller
 {
     // create service
-    public function create(Request $request)
+    public function create(Request $request, EbulkSMS $sms)
     {
         $order = $request->programme->orderOfServices;
 
-        $service = new OrderOfService;
+        $service = new App\OrderOfService;
         $service->programme_id = $request->programme->id;
         $service->invitee_id = $request->anchor;
         $service->title = $request->title;
@@ -25,6 +27,52 @@ class ServiceController extends Controller
         $service->created_by = $request->user->id;
 
         if($service->save()) {
+            $findAnchor = App\Invitee::find($service->invitee_id);
+
+            $anchor = null;
+
+            switch (true) {
+                case $findAnchor->member_id:
+                $anchor = App\Member::find($findAnchor->member_id);
+                break;
+                case $findAnchor->firstTimer_id:
+                $anchor = App\FirstTimer::find($findAnchor->firstTimer_id);
+                break;
+                case $findAnchor->slip_id:
+                $anchor = App\Slip::find($findAnchor->slip_id);
+                break;
+                default:
+                $anchor = null;
+            }
+
+
+            $smsSender = $request->church->sms_sender_name ? 
+            $request->church->sms_sender_name : 'Sedmic';
+
+            $message = "Hi $anchor->first_name! This is to notify you that you\'ll 
+            be handling $service->title of the $request->programme->title programme
+             from $service->start_time to $service->end_time. Thank you";
+
+            $mail = [];
+            $mail['programme'] = $request->programme;
+            $mail['service'] = $service;
+            $mail['anchor'] = $anchor;
+
+            if($request->programme->sms_notification){
+                if($anchor && $anchor->phone){
+                    $sms->fromSender($smsSender)
+                    ->composeMessage($message)
+                    ->addRecipients($anchor->phone)
+                    ->send();
+                }
+            }
+
+            if($request->programme->email_notification){
+                if($anchor && $anchor->email){
+                    $anchor->notify(new ServiceCreate($mail));                  
+                }    
+            }
+
             return response()->json([
                 'successMessage' => 'Service created successfully',
                 'service' => $service
@@ -38,26 +86,225 @@ class ServiceController extends Controller
     }
 
 
-    // create service
+    // update service
     public function update(Request $request)
     {
-
         $service = $request->service;
-        $service->invitee_id = $request->anchor ? 
-        $request->anchor : $service->anchor;
 
-        $service->invitee_id = $request->title ? 
-        $request->title : $service->title;
+        // last service
+        $lastService = $request->programme->orderOfServices()
+        ->orderBy('order', 'desc')->first();
 
-        $service->invitee_id = $request->instruction ? 
-        $request->instruction : $service->instruction;
+        // before
+        $firstService = $request->programme->orderOfServices()
+        ->orderBy('order', 'asc')->first();
 
-        $service->updated_by = $request->user->id;
+        // get the start_time(mins) of the old service
+        $service_start = explode(':', $service->start_time);
+        $service_start_min = ($service_start[0]*60) + 
+        $service_start[1] + ($service_start[2]>30?1:0);
 
-        if($service->save()) {
+        // get the end_time(mins) of the old service
+        $service_end = explode(':', $service->end_time);
+        $service_end_min = ($service_end[0]*60) + 
+        $service_end[1] + ($service_end[2]>30?1:0);        
+
+        // get the start_time(mins) of the new service
+        $start_time = explode(':', $request->start_time);
+        $start_time_min = $request->start_time ? ($start_time[0]*60) + 
+        $start_time[1] + ($start_time[2]>30?1:0) : $service_start_min;
+
+        // get the end_time(mins) of the new service
+        $end_time = explode(':', $request->end_time);
+        $end_time_min = $request->end_time ? ($end_time[0]*60) + 
+        $end_time[1] + ($end_time[2]>30?1:0) : $service_end_min;
+
+        // get the end_time(mins) of the last service 
+        $last_service = explode(':', $lastService->end_time);
+        $last_service_end = ($last_service[0]*60) + 
+        $last_service[1] + ($last_service[2]>30?1:0);
+
+        $start_diff = 0;
+        $beforeValue = null;
+        if($start_time_min > $service_start_min){
+            $start_diff = $start_time_min - $service_start_min;
+            $beforeValue = true;
+        }
+
+        if($start_time_min < $service_start_min){
+            $start_diff = $service_start_min - $start_time_min;
+            $beforeValue = false;
+        }
+
+        $end_diff = 0;
+        $afterValue = null;
+        if($end_time_min > $service_end_min){
+            $end_diff = $end_time_min - $service_end_min;
+            $afterValue = true;
+        }
+
+        if($end_time_min < $service_end_min){
+            $end_diff = $service_end_min - $end_time_min;
+            $afterValue = false;
+        }
+
+
+        if((!$beforeValue && (($firstService->duration - $start_diff) < 5)) || 
+        ($request->service->order == 1 && 
+        ($request->start_time != $request->programme->time_starting))
+        ){
+            return response()->json([
+                'errorMessage' => 'Start time is the beyond the starting time of the programme',
+            ], 401);
+        }
+
+
+        if(($afterValue && (date('H:i:s', 
+        strtotime("+$end_diff minutes", 
+        strtotime($lastService->end_time))) > 
+        $request->programme->time_ending)) || 
+        
+        ($beforeValue && (date('H:i:s', 
+        strtotime("+$start_diff minutes", 
+        strtotime($lastService->end_time))) > 
+        $request->programme->time_ending))){
+            return response()->json([
+                'errorMessage' => 'End time is beyond the time ending for the programme',
+            ], 401);
+        }
+
+
+
+        $beforeServices = $request->programme->orderOfServices()
+        ->where('order', '<', $service->order)->get();
+
+        $afterServices = $request->programme->orderOfServices()
+        ->where('order', '>', $service->order)->get();
+
+            if($beforeValue && $beforeServices){
+                foreach($beforeServices as $before){
+                    $startTime = strtotime("+$start_diff minutes", strtotime($before->start_time));
+                    $endTime = strtotime("+$start_diff minutes", strtotime($before->end_time));
+                
+                    $before_start_time = $before->order == 1 ?
+                    $request->programme->time_starting : date('H:i:s', $startTime);
+
+                    $before->start_time = $before_start_time;
+                    $before->end_time = date('H:i:s', $endTime);
+
+                    $splitStart = explode(':', $before_start_time);
+                    $start_mins = ($splitStart[0]*60)+($splitStart[1])+($splitStart[2]>30?1:0);
+
+                    $splitEnd = explode(':', date('H:i:s', $endTime));
+                    $end_mins = ($splitEnd[0]*60)+($splitEnd[1])+($splitEnd[2]>30?1:0);
+
+                    $before->duration = $end_mins - $start_mins;
+                    $before->save();
+                }
+            }  
+                
+            if(!$beforeValue && $beforeServices){
+                foreach($beforeServices as $before){
+                    $startTime = strtotime("-$start_diff minutes", strtotime($before->start_time));
+                    $endTime = strtotime("-$start_diff minutes", strtotime($before->end_time));
+                    
+                    $before_start_time = $before->order == 1 ?
+                    $request->programme->time_starting : date('H:i:s', $startTime);
+    
+                    $before->start_time = $before_start_time;
+                    $before->end_time = date('H:i:s', $endTime);
+    
+                    $splitStart = explode(':', $before_start_time);
+                    $start_mins = ($splitStart[0]*60)+($splitStart[1])+($splitStart[2]>30?1:0);
+    
+                    $splitEnd = explode(':', date('H:i:s', $endTime));
+                    $end_mins = ($splitEnd[0]*60)+($splitEnd[1])+($splitEnd[2]>30?1:0);
+    
+                    $before->duration = $end_mins - $start_mins;
+                    $before->save();
+                }
+            }            
+
+            if($afterValue && $afterServices){
+                foreach($afterServices as $before){
+                    $startTime = strtotime("+$end_diff minutes", strtotime($before->start_time));
+                    $endTime = strtotime("+$end_diff minutes", strtotime($before->end_time));
+                
+                    $before_start_time = $before->order == 1 ?
+                    $request->programme->time_starting : date('H:i:s', $startTime);
+
+                    $before->start_time = $before_start_time;
+                    $before->end_time = date('H:i:s', $endTime);
+
+                    $splitStart = explode(':', $before_start_time);
+                    $start_mins = ($splitStart[0]*60)+($splitStart[1])+($splitStart[2]>30?1:0);
+
+                    $splitEnd = explode(':', date('H:i:s', $endTime));
+                    $end_mins = ($splitEnd[0]*60)+($splitEnd[1])+($splitEnd[2]>30?1:0);
+
+                    $before->duration = $end_mins - $start_mins;
+                    $before->save();
+                }
+            }  
+                
+            if(!$afterValue && $afterServices){
+                foreach($afterServices as $before){
+                    $startTime = strtotime("-$end_diff minutes", strtotime($before->start_time));
+                    $endTime = strtotime("-$end_diff minutes", strtotime($before->end_time));
+                    
+                    $before_start_time = $before->order == 1 ?
+                    $request->programme->time_starting : date('H:i:s', $startTime);
+    
+                    $before->start_time = $before_start_time;
+                    $before->end_time = date('H:i:s', $endTime);
+    
+                    $splitStart = explode(':', $before_start_time);
+                    $start_mins = ($splitStart[0]*60)+($splitStart[1])+($splitStart[2]>30?1:0);
+    
+                    $splitEnd = explode(':', date('H:i:s', $endTime));
+                    $end_mins = ($splitEnd[0]*60)+($splitEnd[1])+($splitEnd[2]>30?1:0);
+    
+                    $before->duration = $end_mins - $start_mins;
+                    $before->save();
+                }
+            } 
+
+        
+        // update service
+        $updateService = $request->service;
+
+        $updateService->invitee_id = $request->anchor ? 
+        $request->anchor : $updateService->invitee_id;
+
+        $updateService->title = $request->title ? 
+        $request->title : $updateService->title;
+
+        $new_start_time = $request->start_time ? 
+        $request->start_time : $updateService->start_time;
+
+        $accepted_start_time = $updateService->order == 1 ?
+        $request->programme->time_starting : $new_start_time;
+        
+        $updateService->start_time = $accepted_start_time; 
+
+        $timesplit = explode(':', $accepted_start_time);
+        $min = ($timesplit[0]*60)+($timesplit[1])+($timesplit[2]>30?1:0);
+
+        $updateService->end_time = $request->end_time ? 
+        $request->end_time : $updateService->end_time;
+
+        $updateService->duration = $end_time_min - $min;
+
+        $updateService->instruction = $request->instruction ? 
+        $request->instruction : $updateService->instruction;
+
+        $updateService->updated_by = $request->user->id;
+        
+
+        if($updateService->save()) {
             return response()->json([
                 'successMessage' => 'Service updated successfully',
-                'service' => $service
+                'service' => $updateService
             ], 201);
         }
 
@@ -117,7 +364,7 @@ class ServiceController extends Controller
             'deleted_by' => $request->user->id
         ]);
 
-        $deleteService = OrderOfService::destroy($service->id);
+        $deleteService = App\OrderOfService::destroy($service->id);
         
         if($updateService && $deleteService) {
             return response()->json([
@@ -172,7 +419,7 @@ class ServiceController extends Controller
     }
 
 
-    public function fixGap(Request $request)
+    public function restoreServices(Request $request)
     {
         $oldServices = $request->programme->orderOfServices;
 
@@ -182,26 +429,25 @@ class ServiceController extends Controller
 
             $duration = date('i', ($gapend - $gapstart));
 
-            $service = new OrderOfService;
+            $service = new App\OrderOfService;
             $service->programme_id = $request->programme->id;
             $service->invitee_id = $request->user->id;
-            $service->title = 'Fixing gaps';
+            $service->title = 'temp-service-'.mt_rand(0, 9999999);;
             $service->start_time = $gap['start_time'];
             $service->end_time = $gap['end_time'];
             $service->duration = $duration;
             $service->order = $gap['order'];
-            $service->instruction = 'No instruct';        
+            $service->instruction = 'No instruction';        
             $service->created_by = $request->user->id; 
             $service->save();           
         }
 
-        $newServices = OrderOfService::where('programme_id', $request->programme)
+        $newServices = App\OrderOfService::where('programme_id', $request->programme->id)
         ->get();
 
         if(count($newServices) - count($oldServices) == count($request->gaps)) {
             return response()->json([
-                'successMessage' => 'Gap(s) fix successfully',
-                'service' => $services
+                'successMessage' => 'Services restored successfully',
             ], 201);
         }
 
@@ -216,7 +462,6 @@ class ServiceController extends Controller
     {
         $services = $request->programme->orderOfServices()
         ->orderBy('order', 'asc')->get();
-
 
         for($x = 0; $x < count($services); $x++){
             $time = isset($time) ? $time + $services[$x]->duration : 
@@ -243,7 +488,7 @@ class ServiceController extends Controller
 
         if($services) {
             return response()->json([
-                'successMessage' => 'Gap(s) squash successfully',
+                'successMessage' => 'Services squashed successfully',
             ], 201);
         }
 

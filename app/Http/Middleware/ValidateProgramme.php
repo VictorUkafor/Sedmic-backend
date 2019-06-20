@@ -19,8 +19,8 @@ class ValidateProgramme
         $validator = Validator::make($request->all(), [
             'title' => 'required',
             'date' => 'required|date',
-            'time_starting' => 'required',
-            'time_ending' => 'required',
+            'time_starting' => 'required|date_format:H:i:s',
+            'time_ending' => 'required|date_format:H:i:s',
             'type_of_meeting' => 'required',
             'invitees' => 'required'
         ]);
