@@ -44,6 +44,15 @@ class Programme extends Model
         return $this->hasMany('App\OrderOfService');
     }
 
+
+    /**
+     * Get the order of incomes of the programme.
+     */
+    public function incomes()
+    {
+        return $this->hasMany('App\Income', 'programme_id');
+    }
+
     protected $guarded = ['id'];
 
     protected $fillable = [

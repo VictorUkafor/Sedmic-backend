@@ -12,6 +12,13 @@ class IncomeType extends Model
 
     protected $guarded = ['id'];
 
+    /**
+     * Get the order of incomes of the incomeType.
+     */
+    public function incomes()
+    {
+        return $this->hasMany('App\Income', 'income_type_id');
+    }
     
     protected $fillable = [
         'church_id',

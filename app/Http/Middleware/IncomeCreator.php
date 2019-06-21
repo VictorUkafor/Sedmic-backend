@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 
-class ProgrammeCreator
+class IncomeCreator
 {
     /**
      * Handle an incoming request.
@@ -15,7 +15,7 @@ class ProgrammeCreator
      */
     public function handle($request, Closure $next)
     {        
-        if($request->user->id != $request->programme->created_by){
+        if($request->user->id != $request->income->created_by){
             return response()->json([
                 'errorMessage' => 'Unauthorized'
             ], 401);                       

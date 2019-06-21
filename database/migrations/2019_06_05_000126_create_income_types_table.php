@@ -20,7 +20,7 @@ class CreateIncomeTypesTable extends Migration
             $table->string('format');
             $table->string('currency');
             $table->string('prize')->nullable();
-            $table->integer('group');
+            $table->integer('group')->default(0);
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
             $table->integer('deleted_by')->nullable();

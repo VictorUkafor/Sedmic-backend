@@ -17,8 +17,10 @@ class ValidateIncome
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
+            'currency' => 'required',
             'amount' => 'required',
-            'member' => 'required|exists:members,id',
+            'member' => 'exists:members,id',
+            'cash' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -27,6 +29,17 @@ class ValidateIncome
                 'errors' => $errors
             ], 400);
         } 
+
+        
+        $incomeType = $request->incomeType;
+        $request->member = $incomeType->format == 'cummulative' ?
+        $request->user->id : $request->member;
+
+        if(!$request->member){
+            return response()->json([
+                'errorMessage' => 'The member field is required'
+            ], 400);
+        }
 
         return $next($request);
 

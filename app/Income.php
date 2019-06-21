@@ -15,6 +15,9 @@ class Income extends Model
     
     protected $fillable = [
         'church_id',
+        'income_type_id',
+        'programme_id',
+        'title',
         'type',
         'format',
         'amount',

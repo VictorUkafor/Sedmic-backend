@@ -190,6 +190,9 @@ return [
 
         Barryvdh\DomPDF\ServiceProvider::class,
 
+        // Rave
+        KingFlamez\Rave\RaveServiceProvider::class,
+
  
     ],
 
@@ -250,6 +253,8 @@ return [
         'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
 
         'PDF' => Barryvdh\DomPDF\Facade::class,
+
+        'Rave' => KingFlamez\Rave\Facades\Rave::class,
 
 
     ],

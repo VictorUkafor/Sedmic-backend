@@ -15,7 +15,10 @@ class CreateIncomesTable extends Migration
     {
         Schema::create('incomes', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('income_type_id')->unsigned()->nullable();
             $table->integer('church_id')->unsigned()->nullable();
+            $table->integer('programme_id')->unsigned()->nullable();
+            $table->string('title');
             $table->string('type');
             $table->string('format');
             $table->string('amount');
@@ -33,8 +36,14 @@ class CreateIncomesTable extends Migration
         });
 
         Schema::table('incomes', function($table) {
+            $table->foreign('income_type_id')->references('id')
+            ->on('income_types')->onDelete('cascade');
+
             $table->foreign('church_id')->references('id')
             ->on('churches')->onDelete('cascade');
+
+            $table->foreign('programme_id')->references('id')
+            ->on('programmes')->onDelete('cascade');
           });
     }
 

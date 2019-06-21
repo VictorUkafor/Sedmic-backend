@@ -1,5 +1,5 @@
 {
-    "name": "sedmic/sedmic",
+    "name": "victorukafor/sedmic",
     "description": "Secured Environment for Data Management in Church",
     "version": "1.0.0",
     "keywords": ["laravel", "REST API", "php", "jwt", "cloudinary"],
@@ -16,6 +16,7 @@
         "barryvdh/laravel-dompdf": "^0.8.4",
         "guzzlehttp/guzzle": "~5.3|~6.0",
         "jrm2k6/cloudder": "0.4.*",
+        "kingflamez/laravelrave": "^1.1",
         "laravel/framework": "5.7",
         "laravel/tinker": "~1.0",
         "nesbot/carbon": "~1.0",
