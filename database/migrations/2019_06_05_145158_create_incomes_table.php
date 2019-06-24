@@ -22,7 +22,9 @@ class CreateIncomesTable extends Migration
             $table->string('type');
             $table->string('format');
             $table->string('amount');
-            $table->integer('member');
+            $table->integer('member_id')->unsigned()->nullable();
+            $table->integer('first_timer_id')->unsigned()->nullable();
+            $table->integer('slip_id')->unsigned()->nullable();
             $table->string('default_currency');
             $table->string('paid_currency');
             $table->string('prize')->nullable();
@@ -44,6 +46,15 @@ class CreateIncomesTable extends Migration
 
             $table->foreign('programme_id')->references('id')
             ->on('programmes')->onDelete('cascade');
+
+            $table->foreign('member_id')->references('id')
+            ->on('members')->onDelete('cascade');
+
+            $table->foreign('first_timer_id')->references('id')
+            ->on('first_timers')->onDelete('cascade');
+
+            $table->foreign('slip_id')->references('id')
+            ->on('slips')->onDelete('cascade');
           });
     }
 

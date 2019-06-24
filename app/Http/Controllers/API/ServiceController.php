@@ -58,25 +58,24 @@ class ServiceController extends Controller
             $mail['service'] = $service;
             $mail['anchor'] = $anchor;
 
-            if($request->programme->sms_notification){
-                if($anchor && $anchor->phone){
+            if($anchor){
+                if($anchor->phone && $request->programme->sms_notification){
                     $sms->fromSender($smsSender)
                     ->composeMessage($message)
                     ->addRecipients($anchor->phone)
                     ->send();
                 }
-            }
 
-            if($request->programme->email_notification){
-                if($anchor && $anchor->email){
+                if($anchor->email && $request->programme->email_notification){
                     $anchor->notify(new ServiceCreate($mail));                  
-                }    
+                } 
             }
 
             return response()->json([
                 'successMessage' => 'Service created successfully',
                 'service' => $service
             ], 201);
+
         }
 
         return response()->json([

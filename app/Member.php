@@ -45,13 +45,39 @@ class Member extends Model
 
 
     /**
-     * Get the souls of the member.
+     * Get the firstTimers of the member.
      */
-    public function souls()
+    public function firstTimers()
     {
         return $this->hasMany('App\FirstTimer', 'invited_by');
     }
 
+
+    /**
+     * Get the slips of the member.
+     */
+    public function slips()
+    {
+        return $this->hasMany('App\Slip', 'ministered_by');
+    }
+
+
+    /**
+     * Get the invitees that are member.
+     */
+    public function invitees()
+    {
+        return $this->hasMany('App\Invitee', 'member_id');
+    }
+
+
+    /**
+     * Get the givings of the member.
+     */
+    public function givings()
+    {
+        return $this->hasMany('App\Income', 'member_id');
+    }
 
     protected $guarded = ['id'];
 

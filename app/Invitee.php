@@ -27,6 +27,7 @@ class Invitee extends Model
         return $this->hasMany('App\Sign', 'invitee_id');
     }
 
+
     protected $guarded = ['id'];
 
     protected $fillable = [

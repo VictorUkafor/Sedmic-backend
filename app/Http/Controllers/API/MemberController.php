@@ -115,7 +115,7 @@ class MemberController extends Controller
 
         $church = $request->church;
 
-        $members = Member::where('church_id', $church->id)
+        $members = $church->members()
         ->when($search, function ($query) use($search){
             return $query->where('first_name', 'ilike', '%'.$search.'%')
              ->orWhere('last_name', 'ilike', '%'.$search.'%')

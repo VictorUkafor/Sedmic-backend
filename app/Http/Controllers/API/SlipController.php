@@ -65,6 +65,9 @@ class SlipController extends Controller
         $slip->ministered_by = $request->ministered_by ?
         $request->ministered_by : $slip->ministered_by; 
 
+        $slip->moved = (int)$request->moved ?
+        (int)$request->moved : $slip->moved; 
+
         $slip->updated_by = $request->user->id;
 
 
@@ -101,9 +104,92 @@ class SlipController extends Controller
 
     public function viewAll(Request $request)
     {
-        $slips = Slip::where([
-            'church_id' => $request->church->id,
-        ])->get();
+        $unMove = $request->query('moved') == 'no';
+
+        $moved = $request->query('moved') == 'yes';
+
+        $campaign = $request->query('campaign') ? 
+        $request->query('campaign') : '';
+
+        $minister = (int)$request->query('minister') ? 
+        (int)$request->query('minister') : '';
+
+        $search = $request->query('search') ? 
+        $request->query('search') : '';
+         
+        $paginate = $request->query('paginate') ? 
+        $request->query('paginate') : 20; 
+
+        $sort = $request->query('sort') ? 
+        $request->query('sort') : 'id';
+
+        $order = ($request->query('order') === 'asc' ||
+        $request->query('order') === 'desc') ?
+        $request->query('order') : 'desc';
+
+        $sex = $request->query('sex') ? 
+        $request->query('sex') : '';
+
+        $email = $request->query('email') ? 
+        $request->query('email') : '';
+
+        $phone = $request->query('phone') ? 
+        $request->query('phone') : '';
+
+        $created_by = (int)$request->query('created_by') ? 
+        (int)$request->query('created_by') : '';
+
+        $updated_by = (int)$request->query('updated_by') ? 
+        (int)$request->query('updated_by') : '';
+
+        $first_name = $request->query('first_name') ? 
+        $request->query('first_name') : '';
+
+        $last_name = $request->query('last_name') ? 
+        $request->query('last_name') : '';
+
+
+
+        $slips = $request->church->slips()
+        ->when($search, function ($query) use($search){
+            return $query->where('first_name', 'ilike', '%'.$search.'%')
+             ->orWhere('last_name', 'ilike', '%'.$search.'%');
+        })
+        ->when($campaign, function ($query) use($campaign){
+            return $query->where('campaign', $campaign);
+        })
+        ->when($minister, function ($query) use($minister){
+            return $query->where('ministered_by', $minister);
+        })        
+        ->when($sex, function ($query) use($sex){
+            return $query->where('sex', $sex);
+        })
+        ->when($email, function ($query) use($email){
+            return $query->where('email', 'ilike', '%'.$email.'%');
+        })
+        ->when($phone, function ($query) use($phone){
+            return $query->where('phone', 'ilike', '%'.$phone.'%');
+        })
+        ->when($first_name, function ($query) use($first_name){
+            return $query->where('first_name', 'ilike', '%'.$first_name.'%');
+        })
+        ->when($last_name, function ($query) use($last_name){
+            return $query->where('last_name', 'ilike', '%'.$last_name.'%');
+        })
+        ->when($created_by, function ($query) use($created_by){
+            return $query->where('created_by', $created_by);
+        })
+        ->when($updated_by, function ($query) use($updated_by){
+            return $query->where('updated_by', $updated_by);
+        })
+        ->when($unMove, function ($query) use($unMove){
+            return $query->where('moved', 0);
+        })
+        ->when($moved, function ($query) use($moved){
+            return $query->where('moved', '>', 0);
+        })
+        ->orderBy($sort, $order)->paginate($paginate);
+
 
 
         if(!count($slips)) {
@@ -112,7 +198,7 @@ class SlipController extends Controller
             ], 404);
         }
 
-        if($slips) {
+        if(count($slips)) {
             return response()->json([
                 'slips' => $slips
             ], 200);
@@ -125,16 +211,16 @@ class SlipController extends Controller
     }
 
 
-    public function delete(Request $request, $slipId)
+    public function delete(Request $request)
     {
         $slip = $request->slip;
 
         $slip->update([
             'deleted_by' => $request->user->id
         ]);
-        
-        if($slip) {
-            Slip::destroy($slipId);
+
+        $deleteSlip = Slip::destroy($slip->id);
+        if($deleteSlip) {
             return response()->json([
                 'successMessage' => 'Slip deleted successfully'
             ], 200);

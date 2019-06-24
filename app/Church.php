@@ -8,6 +8,15 @@ class Church extends Model
 {
 
     /**
+     * Get the users of the church.
+     */
+    public function users()
+    {
+        return $this->hasMany('App\User', 'church_username', 'username');
+    }
+
+
+    /**
      * Get the members of the church.
      */
     public function members()

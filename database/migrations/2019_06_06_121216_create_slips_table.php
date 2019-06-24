@@ -25,6 +25,7 @@ class CreateSlipsTable extends Migration
             $table->string('address')->nullable();
             $table->string('image')->nullable();
             $table->string('ministered_by')->nullable();
+            $table->string('moved')->default(0);
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
             $table->integer('deleted_by')->nullable();

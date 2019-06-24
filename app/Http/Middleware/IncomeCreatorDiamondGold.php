@@ -18,7 +18,7 @@ class IncomeCreatorDiamondGold
         $user = $request->user;
 
         if($user->id == $request->income->created_by || 
-        ($user->church_id == $request->church->id && 
+        ($user->church_username == $request->church->username && 
         ($user->account_type == 'diamond' || $user->account_type == 'gold'))){
             return $next($request);               
         }

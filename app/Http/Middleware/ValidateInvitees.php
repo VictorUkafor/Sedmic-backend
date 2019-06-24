@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Validator;
 
-class ValidateIncome
+class ValidateInvitees
 {
     /**
      * Handle an incoming request.
@@ -17,12 +17,7 @@ class ValidateIncome
     public function handle($request, Closure $next)
     {
         $validator = Validator::make($request->all(), [
-            'currency' => 'required',
-            'amount' => 'required',
-            'member' => 'exists:members,id',
-            'first_timer' => 'exists:first_timers,id',
-            'slip' => 'exists:slips,id',
-            'cash' => 'required',
+            'invitees' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -30,19 +25,20 @@ class ValidateIncome
             return response()->json([
                 'errors' => $errors
             ], 400);
-        } 
-
-
-        $incomeType = $request->incomeType;
-
-        if((!$request->member || !$request->first_timer || !$request->slip) && 
-        ($incomeType->format == 'individualize' || $incomeType->cash)){
-            return response()->json([
-                'errorMessage' => 'Please select the appropriate contact'
-            ], 400);
         }
 
-        return $next($request);
+        $invitees = json_decode(json_encode($request->invitees), true);
+        $invitees = json_decode($invitees, true);
 
+        if(!$attendees['members'] || 
+        !$attendees['firstTimers'] || 
+        !$attendees['slips']){
+            return response()->json([
+                'successMessage' => 'Contacts could not be found'
+            ], 404);             
+        }
+
+        $request->invitees = $invitees;
+        return $next($request);
     }
 }

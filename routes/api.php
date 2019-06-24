@@ -598,6 +598,15 @@ Route::group([
                         // get programme attendees
                         Route::get('/attendees', 'AttendanceController@attendees');
 
+                        // post programme attendees
+                        Route::post('/attendees', 'AttendanceController@addAttendees');
+
+                        // get programme first timers
+                        Route::get('/first_timers', 'AttendanceController@getFirstTimers');
+
+                        // post programme new contact
+                        Route::post('/new', 'AttendanceController@newContact');
+
                         // get programme absentees
                         Route::get('/absentees', 'AttendanceController@absentees');
                             
@@ -662,6 +671,8 @@ Route::group([
                 });
 
             });
+
+
         
         });
     

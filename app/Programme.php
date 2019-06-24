@@ -19,6 +19,15 @@ class Programme extends Model
     }
 
     /**
+     * Get the firstTimers of the programme.
+     */
+    public function firstTimers()
+    {
+        return $this->hasMany('App\FirstTimer');
+    }
+
+
+    /**
      * Get the signs of the programme.
      */
     public function signs()

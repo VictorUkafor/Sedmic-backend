@@ -33,7 +33,9 @@ class IncomeController extends Controller
 
         $income->paid_currency = $request->currency;
         $income->amount = $request->amount;
-        $income->member = $request->member;
+        $income->member_id = $request->member;
+        $income->first_timer_id = $request->first_timer;
+        $income->slip_id = $request->slip;
         $income->cash = $request->cash;
         $income->created_by = $request->user->id;
 
@@ -62,8 +64,14 @@ class IncomeController extends Controller
         $income->amount = $income->cash ?
         $income->amount : $amount;
 
-        $income->member = $request->member ? 
-        $request->member : $income->member;
+        $income->member_id = $request->member ? 
+        $request->member : $income->member_id;
+
+        $income->first_timer_id = $request->first_timer ? 
+        $request->first_timer : $income->first_timer_id;
+
+        $income->slip_id = $request->slip ? 
+        $request->slip : $income->slip_id;        
 
         $income->paid_currency = $request->currency ?
         $request->currency : $income->currency;

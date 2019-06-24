@@ -16,6 +16,7 @@ class CreateFirstTimersTable extends Migration
         Schema::create('first_timers', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('church_id')->unsigned()->nullable();
+            $table->integer('programme_id')->unsigned()->nullable();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('sex')->nullable();
@@ -24,6 +25,7 @@ class CreateFirstTimersTable extends Migration
             $table->string('address')->nullable();
             $table->string('invited_by')->nullable();
             $table->string('image')->nullable();
+            $table->string('moved')->default(0);
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
             $table->integer('deleted_by')->nullable();
@@ -34,6 +36,9 @@ class CreateFirstTimersTable extends Migration
         Schema::table('first_timers', function($table) {
             $table->foreign('church_id')->references('id')
             ->on('churches')->onDelete('cascade');
+
+            $table->foreign('programme_id')->references('id')
+            ->on('programmes')->onDelete('cascade');
         });
     }
 
