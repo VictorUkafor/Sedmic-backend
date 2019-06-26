@@ -56,6 +56,7 @@ Route::group([
 
     });
 
+
     // routes requring authentication
     Route::middleware('jwt.auth')->group(function () {
 
@@ -141,6 +142,7 @@ Route::group([
 
         Route::middleware('churchCreated')->group(function () {
             
+
             Route::prefix('members')->group(function () {
                 
                 // create member
@@ -426,15 +428,10 @@ Route::group([
 
 
             // first timer routes
-            Route::prefix('firsttimers')->group(function () {
-
-                // create first timer 
-                Route::post('/', 'FirstTimerController@create')
-                ->middleware('validateFirstTimer'); 
+            Route::prefix('first-timers')->group(function () {
 
                 // all first timers 
                 Route::get('/', 'FirstTimerController@viewAll'); 
-
 
                 // routes for single first timer
                 Route::group([
@@ -442,15 +439,13 @@ Route::group([
                     'middleware' => 'firstTimerExist',
                 ], function () {
                     
-                    // update first timer
-                    Route::put('/', 'FirstTimerController@update')
-                    ->middleware('imageNotRequired'); 
 
-                    // update first timer
+                    // get first timer
                     Route::get('/', 'FirstTimerController@show');
 
-                    // delete first timer
-                    Route::delete('/', 'FirstTimerController@delete');
+                    // move first timer to member
+                    Route::post('/move', 'FirstTimerController@move')
+                    ->middleware('diamondOrGold');
 
                 });
 
@@ -480,6 +475,10 @@ Route::group([
 
                     // update slip
                     Route::get('/', 'SlipController@show'); 
+
+                    // move slip
+                    Route::post('/move', 'SlipController@move')
+                    ->middleware('diamondOrGold'); 
 
                     // delete slip
                     Route::delete('/', 'SlipController@delete');
@@ -584,6 +583,9 @@ Route::group([
                     // routes for programme handlers
                     Route::middleware('programmeHandlers')->group(function () {
 
+                        // post programme invitee
+                        Route::post('/invitee', 'ProgrammeController@addInvitee');
+
                         // get programme invitees
                         Route::post('/invitees', 'ProgrammeController@addInvitees')
                         ->middleware('validateAddInvitees');
@@ -601,9 +603,6 @@ Route::group([
                         // post programme attendees
                         Route::post('/attendees', 'AttendanceController@addAttendees');
 
-                        // get programme first timers
-                        Route::get('/first_timers', 'AttendanceController@getFirstTimers');
-
                         // post programme new contact
                         Route::post('/new', 'AttendanceController@newContact');
 
@@ -613,6 +612,8 @@ Route::group([
                         // get programme attendee signs
                         Route::get('/signs', 'AttendanceController@signs');
 
+
+                        // order of services
                         Route::group([
                             'prefix' => 'services',
                             'middleware' => 'gappingService',
@@ -626,6 +627,7 @@ Route::group([
                             ->middleware('serviceExist');                              
 
                         });
+
 
                         // routes for single invitee
                         Route::group([
@@ -665,14 +667,46 @@ Route::group([
                             });
 
                         });
+                        
+                        
+                        // first timer routes
+                        Route::prefix('first-timers')->group(function () {
+                            
+                            // get programme first timers
+                            Route::get('/', 'AttendanceController@getFirstTimers');
+                            
+                            // create first timer 
+                            Route::post('/', 'FirstTimerController@create')
+                            ->middleware('validateFirstTimer'); 
 
+
+                            // routes for single first timer
+                            Route::group([
+                                'prefix' => '{firstTimerId}',
+                                'middleware' => 'firstTimerExist',
+                            ], function () {
+                                
+                                // get first timer
+                                Route::get('/', 'FirstTimerController@show');
+                                
+                                // update first timer
+                                Route::put('/', 'FirstTimerController@update')
+                                ->middleware('imageNotRequired'); 
+
+                                // delete first timer
+                                Route::delete('/', 'FirstTimerController@delete');
+                            
+                            });
+                        
+                        });
+                    
                     });
+
+
 
                 });
 
             });
-
-
         
         });
     

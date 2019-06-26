@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Slip;
+use App\FirstTimer;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -10,6 +11,9 @@ class SlipController extends Controller
 {
     public function create(Request $request)
     {
+        $image = $request->image ? 
+        $request->first_name.$request->last_name.'slip'.
+        $request->user->church_username : '';
 
         $slip = new Slip;
         $slip->church_id = $request->church->id;
@@ -19,11 +23,15 @@ class SlipController extends Controller
         $slip->sex = $request->sex;
         $slip->email = $request->email;
         $slip->phone = $request->phone;
+        $slip->image = $image;
         $slip->address = $request->address;
         $slip->ministered_by = $request->ministered_by;
         $slip->created_by = $request->user->id;
 
         if($slip->save()) {
+            if($request->image){
+                Cloudder::upload($request->image->getRealPath(), $image);   
+            }
             return response()->json([
                 'successMessage' => 'Slip created successfully',
                 'slip' => $slip
@@ -59,6 +67,11 @@ class SlipController extends Controller
         $slip->phone = $request->phone ?
         $request->phone : $slip->phone;  
 
+        // set image public_id for cloudinary
+        $image = $request->image ? 
+        $slip->first_name.$slip->last_name.'first-timer'.
+        $request->user->church_username : $slip->image;
+
         $slip->address = $request->address ?
         $request->address : $slip->address;  
 
@@ -72,6 +85,13 @@ class SlipController extends Controller
 
 
         if($slip->save()) {
+
+            if($request->image){
+                if(Cloudder::delete($slip->image)){
+                    Cloudder::upload($request->image->getRealPath(), $image);
+                }     
+            }
+
             return response()->json([
                 'successMessage' => 'Slip updated successfully',
                 'slip' => $slip
@@ -93,6 +113,35 @@ class SlipController extends Controller
             return response()->json([
                 'slip' => $slip
             ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
+
+    public function move(Request $request)
+    {
+        $slip = $request->slip;
+
+        $firstTimer = new Firstimer;
+        $firstTimer->first_name = $slip->first_name;
+        $firstTimer->last_name = $slip->last_name;
+        $firstTimer->sex = $slip->sex;
+        $firstTimer->phone = $slip->phone;
+        $firstTimer->email = $slip->email;
+        $firstTimer->address = $slip->address;
+        $firstTimer->created_by = $request->user->id;
+        $firstTimer->saved();
+
+        $slip->block = $slip->id;
+
+        if($slip->saved()) {
+            return response()->json([
+                'successMessage' => 'Slip moved to first timer successfully'
+            ], 201);
         }
 
         return response()->json([

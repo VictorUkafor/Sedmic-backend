@@ -15,7 +15,8 @@ class MemberController extends Controller
         $user = $request->user;
         $church = $request->church;
         $image = $request->image ? 
-        $request->first_name.$request->last_name.$user->church_username : '';
+        $request->first_name.$request->last_name.'member'.
+        $user->church_username : '';
 
         $member = new Member;
 

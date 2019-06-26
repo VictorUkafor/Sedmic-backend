@@ -9,6 +9,47 @@ use App\Http\Controllers\Controller;
 
 class AttendanceController extends Controller
 {
+
+    // add invitee
+    public function addInvitee(Request $request)
+    {
+        $image = $request->image ? 
+        $request->first_name.$request->last_name.'slip'.
+        $request->user->church_username : '';
+
+        $slip = new Slip;
+        $slip->church_id = $request->church->id;
+        $slip->campaign = $request->programme->title;
+        $slip->first_name = $request->first_name;
+        $slip->last_name = $request->last_name;
+        $slip->sex = $request->sex;
+        $slip->email = $request->email;
+        $slip->phone = $request->phone;
+        $slip->image = $image;
+        $slip->address = $request->address;
+        $slip->ministered_by = $request->user->id;
+        $slip->created_by = $request->user->id;
+
+        if($slip->saved()) {
+            DB::table('invitees')->insert([
+                'programme_id' => $request->programme->id,
+                'slip_id' => $slip->id,
+                'first_name' => $slip->first_name,
+                'last_name' => $slip->last_name,                            
+                'image' => $slip->image,
+                'created_by' => $request->user->id,
+            ]);
+
+            return response()->json([
+                'successMessage' => 'Invitee added successfully'
+            ], 200);
+        }
+        
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
     
     // show all invitees
     public function invitees(Request $request)

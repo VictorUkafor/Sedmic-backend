@@ -15,9 +15,8 @@ class IncomeController extends Controller
 
         $income = new Income;
         $income->church_id = $request->church->id;
-
         $income->income_type_id = $incomeType->id;
-
+        
         $income->programme_id = $request->programme ? 
         $request->programme->id : null;
 
@@ -57,6 +56,12 @@ class IncomeController extends Controller
     public function update(Request $request)
     {
         $income = $request->income;
+
+        if($income->cash) {
+            return response()->json([
+                'errorMessage' => 'Income can not be deleted'
+            ], 401);
+        }
 
         $amount = $request->amount ?
         $request->amount : $income->amount;

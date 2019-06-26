@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\FirstTimer;
+use App\Member;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -10,21 +11,26 @@ class FirstTimerController extends Controller
 {
     public function create(Request $request)
     {
+        $image = $request->image ? 
+        $request->first_name.$request->last_name.'first-timer'.
+        $request->user->church_username : '';
 
         $firstTimer = new FirstTimer;
         $firstTimer->church_id = $request->church->id;
-        $firstTimer->programme_id = $request->programme ?
-        $request->programme->id : null;
         $firstTimer->first_name = $request->first_name;
         $firstTimer->last_name = $request->last_name;
         $firstTimer->sex = $request->sex;
         $firstTimer->email = $request->email;
         $firstTimer->phone = $request->phone;
+        $firstTimer->image = $image;
         $firstTimer->address = $request->address;
         $firstTimer->invited_by = $request->invited_by;
         $firstTimer->created_by = $request->user->id;
 
         if($firstTimer->save()) {
+            if($request->image){
+                Cloudder::upload($request->image->getRealPath(), $image);   
+            }
             return response()->json([
                 'successMessage' => 'First timer created successfully',
                 'firstTimer' => $firstTimer
@@ -41,6 +47,13 @@ class FirstTimerController extends Controller
     public function update(Request $request)
     {
         $firstTimer = $request->firstTimer;
+
+        if($firstTimer->created_by != $user->id){
+            return response()->json([
+                'errorMessage' => 'Unauthorized'
+            ], 401);
+        }
+
 
         $firstTimer->first_name = $request->first_name ?
         $request->first_name : $firstTimer->first_name;
@@ -60,6 +73,12 @@ class FirstTimerController extends Controller
         $firstTimer->address = $request->address ?
         $request->address : $firstTimer->address;  
 
+        // set image public_id for cloudinary
+        $image = $request->image ? 
+        $firstTimer->first_name.$firstTimer->last_name.'first-timer'.
+        $request->user->church_username : $firstTimer->image;
+
+
         $firstTimer->invited_by = $request->invited_by ?
         $request->invited_by : $firstTimer->invited_by; 
 
@@ -70,6 +89,13 @@ class FirstTimerController extends Controller
 
 
         if($firstTimer->save()) {
+
+            if($request->image){
+                if(Cloudder::delete($firstTimer->image)){
+                    Cloudder::upload($request->image->getRealPath(), $image);
+                }     
+            }
+
             return response()->json([
                 'successMessage' => 'First updated successfully',
                 'firstTimer' => $firstTimer
@@ -91,6 +117,35 @@ class FirstTimerController extends Controller
             return response()->json([
                 'firstTimer' => $firstTimer
             ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
+
+    public function move(Request $request)
+    {
+        $firstTimer = $request->firstTimer;
+
+        $member = new Member;
+        $member->first_name = $firstTimer->first_name;
+        $member->last_name = $firstTimer->last_name;
+        $member->sex = $firstTimer->sex;
+        $member->phone = $firstTimer->phone;
+        $member->email = $firstTimer->email;
+        $member->address = $firstTimer->address;
+        $member->created_by = $request->user->id;
+        $member->saved();
+
+        $firstTimer->block = $member->id;
+
+        if($firstTimer->saved()) {
+            return response()->json([
+                'successMessage' => 'First timer moved to member successfully'
+            ], 201);
         }
 
         return response()->json([
@@ -205,6 +260,15 @@ class FirstTimerController extends Controller
     public function delete(Request $request)
     {
         $firstTimer = $request->firstTimer;
+        $user = $request->user;
+
+        if($firstTimer->created_by != $user->id &&
+        $request->programme->created_by != $user->id){
+            return response()->json([
+                'errorMessage' => 'Unauthorized'
+            ], 401);
+        }
+
         $firstTimer->update([
             'deleted_by' => $request->user->id
         ]);
