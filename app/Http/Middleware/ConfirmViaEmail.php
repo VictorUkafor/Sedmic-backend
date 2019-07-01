@@ -19,7 +19,7 @@ class ConfirmViaEmail
         $validator = Validator::make($request->all(), [
             'full_name' => 'required',
             'phone' => 'required',
-            'image' => 'image',
+            'image' => 'nullable|image',
             'date_of_birth' => 'date',
             'password' => 'required|min:7|alpha_num|confirmed',
             'password_confirmation' => 'required|same:password',

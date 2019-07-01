@@ -41,7 +41,8 @@ class AdminConfirm extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = url('/api/v1/auth/confirm-email/'.$notifiable->activation_token);
+        $link = env('FRONTEND_APP');
+        $url = $link.'/account-activation?token='.$notifiable->activation_token;
 
         return (new MailMessage)
             ->subject('Please confirm your account')
@@ -49,7 +50,7 @@ class AdminConfirm extends Notification
             ->line($this->admin->full_name.' has created an account for you at Sedmic. 
             We would want you to confirm your account to completed the process.')
             ->line('Your Username: '.$this->user->username)
-            ->action('Click here to confirm your account', url($url))
+            ->action('Click here to confirm your account', $url)
             ->line('Thank you so much for using Sedmic. God bless you!');
     }
 

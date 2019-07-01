@@ -187,16 +187,16 @@ class UnitController extends Controller
 
 
         // deletes unit
-        public function delete(Request $request, $unit_id)
+        public function delete(Request $request)
         {
             $image = $request->unit->image; 
             $user = $request->user;
+            $unit = $request->unit;
 
-            $unit = Unit::where('id', $unit_id)
-            ->update(['deleted_by' => $user->id]);
+            $unit->update(['deleted_by' => $user->id]);
+            $delete = Unit::destroy($unit->id);
             
-            if($unit) {
-                Unit::destroy($unit_id);
+            if($delete) {
                 if($image){ Cloudder::delete($image); } 
                 return response()->json([
                     'successMessage' => 'Unit deleted successfully',

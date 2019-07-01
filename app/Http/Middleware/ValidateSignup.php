@@ -18,7 +18,8 @@ class ValidateSignup
     {
         $validator = Validator::make($request->all(), [
             'username' => ['required', 'min:7', 'unique:users,username', 'regex:/^\S*$/u'],
-            'email' => 'email',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {

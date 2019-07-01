@@ -59,7 +59,7 @@ class IncomeController extends Controller
 
         if($income->cash) {
             return response()->json([
-                'errorMessage' => 'Income can not be deleted'
+                'errorMessage' => 'Unauthorized'
             ], 401);
         }
 
@@ -134,6 +134,76 @@ class IncomeController extends Controller
 
     }
 
+    public function programmeIncomes(Request $request)
+    {
+        $incomes = $request->programme->incomes;
+
+        if(!count($incomes)) {
+            return response()->json([
+                'errorMessage' => 'Incomes can not be found'
+            ], 404);
+        }
+
+        if(count($incomes)) {
+            return response()->json([
+                'incomes' => $incomes
+            ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
+
+    public function typeIncomes(Request $request)
+    {
+        $typeIncomes = $request->incomeType->incomes;
+
+        if(!count($typeIncomes)) {
+            return response()->json([
+                'errorMessage' => 'Incomes could not be found'
+            ], 404);
+        }
+
+        if(count($typeIncomes)) {
+            return response()->json([
+                'typeIncomes' => $typeIncomes
+            ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
+
+    public function programmeTypeIncomes(Request $request)
+    {
+        $typeIncomes = $request->programme->incomes()
+        ->where('income_type_id', $request->incomeType->id)
+        ->get();
+
+        if(!count($typeIncomes)) {
+            return response()->json([
+                'errorMessage' => 'Incomes could not be found'
+            ], 404);
+        }
+
+        if(count($typeIncomes)) {
+            return response()->json([
+                'typeIncomes' => $typeIncomes
+            ], 200);
+        }
+
+        return response()->json([
+            'errorMessage' => 'Internal server error'
+        ], 500);
+
+    }
+
 
     public function createdIncomes(Request $request)
     {
@@ -165,7 +235,7 @@ class IncomeController extends Controller
 
         if($income->cash) {
             return response()->json([
-                'errorMessage' => 'Income can not be deleted'
+                'errorMessage' => 'Unauthorized'
             ], 401);
         }
 

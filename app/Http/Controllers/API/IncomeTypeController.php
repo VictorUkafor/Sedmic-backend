@@ -105,29 +105,6 @@ class IncomeTypeController extends Controller
     }
 
 
-    public function typeIncomes(Request $request)
-    {
-        $typeIncomes = $request->incomeType->incomes;
-
-        if(!count($typeIncomes)) {
-            return response()->json([
-                'errorMessage' => 'Incomes could not be found'
-            ], 404);
-        }
-
-        if(count($typeIncomes)) {
-            return response()->json([
-                'typeIncomes' => $typeIncomes
-            ], 200);
-        }
-
-        return response()->json([
-            'errorMessage' => 'Internal server error'
-        ], 500);
-
-    }
-
-
     public function delete(Request $request)
     {
         $incomeType = $request->incomeType;

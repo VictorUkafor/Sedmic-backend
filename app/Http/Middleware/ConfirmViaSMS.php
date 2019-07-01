@@ -20,7 +20,7 @@ class ConfirmViaSMS
             'verification_code' => 'required',
             'full_name' => 'required',
             'email' => 'email|required',
-            'image' => 'image',
+            'image' => 'nullable|image',
             'date_of_birth' => 'date',
             'password' => 'required|min:7|alpha_num|confirmed',
             'password_confirmation' => 'required|same:password',

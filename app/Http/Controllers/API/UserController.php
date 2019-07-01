@@ -26,6 +26,7 @@ class UserController extends Controller
      */
     public function signup(Request $request, EbulkSMS $sms)
     {
+
         $verificationCode = 'S-'.mt_rand(1000000, 9999999);
         $user = new User;
 
@@ -43,17 +44,19 @@ class UserController extends Controller
                 $user->notify(new ConfirmEmail($user));            
             }
 
+
             if($user->phone){
                 $message = "$verificationCode is your Sedmic verification code";
                 $sms->fromSender('Sedmic')
                 ->composeMessage($message)
                 ->addRecipients($user->phone)
-                ->send();            
+                ->send();
             }
             
             return response()->json([
-                'successMessage' => 'A message has been sent to your phone/email',
-                'code' => $verificationCode
+                'successMessage' => $user->email ? 
+                'A verification email has been sent' : 
+                'A verification code has been sent to your phone',
             ], 201);   
 
         } else {
@@ -61,6 +64,46 @@ class UserController extends Controller
                 'errorMessage' => 'Internal server error'
             ], 500);
         }
+    }
+
+
+    public function tokenConfirmation(Request $request)
+    {
+
+        $token =  $request->query('token');
+        $code =  $request->query('code');
+
+        if(!$token && !$code){
+            return response()->json([
+                'errorMessage' => 'Invalid token or code'
+            ], 400);
+        }
+
+        $user = null;
+
+        if($token){
+            $user = User::where('activation_token', $token)->first();
+        }
+
+        if($code){
+            $user = User::where('activation_token', $code)->first();
+        }
+        
+
+        $value = $token ? 'activation token': 'verification code';
+
+        if(!$user){
+            return response()->json([
+                'errorMessage' => 'Invalid '.$value
+            ], 404);
+        }
+
+        if($user){
+            return response()->json([
+                'successMessage' => 'verified successfully'
+            ], 200);
+        }
+
     }
     
     
@@ -101,7 +144,7 @@ class UserController extends Controller
                 }
 
                 if($user->phone){
-                    $message = "Dear $user->full_name! 
+                    $message = "Dear $user->full_name!. 
                     Your account at Sedmic is active. You can login now to
                     explore all Sedmic has to offer. Congratulation";
                     $sms->fromSender('Sedmic')
@@ -264,11 +307,15 @@ class UserController extends Controller
     }
     
     
-    public function login(Request $request){
+    public function login(Request $request)
+    {
 
     $user = User::where('username', $request->username)->first();
-    $logins = $request->only('username', 'password');
-    $token = JWTAuth::attempt($logins);
+    $token = JWTAuth::attempt([
+        'username' => $request->username,
+        'password' => $request->password,
+        'active' => 1
+    ]);
 
     try {
 
@@ -277,13 +324,6 @@ class UserController extends Controller
                 'errorMessage' => 'Invalid username or password'
             ], 401);
         } 
-        
-        if(!$user->active){
-        return response()->json([
-            'errorMessage' => 'Your account is inactive.'.
-             ' Please contact your admin'
-            ], 401);
-        }
 
     } catch (JWTException $e) {
 
@@ -296,7 +336,7 @@ class UserController extends Controller
         'token' => $token
     ], 201);
 
-}
+    }
 
 
     /**
@@ -461,12 +501,12 @@ class UserController extends Controller
             ], 500);
         }
 
-      }
+    }
 
 
-      public function update(Request $request)
-      {
-          $user = auth()->user();
+    public function update(Request $request)
+    {
+        $user = auth()->user();
                   
           // get the RealPath of new user image
           $image_name = $request->image ? 
@@ -508,7 +548,7 @@ class UserController extends Controller
               ], 500);
           }
   
-        }
+    }
 
 
 }

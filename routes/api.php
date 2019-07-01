@@ -24,6 +24,9 @@ Route::group([
         // sign up account
         Route::post('/signup', 'UserController@signup')
         ->middleware('validateSignup');
+
+        // token confirmation
+        Route::get('/token-confirmation', 'UserController@tokenConfirmation');
             
         // account confirmation via email
         Route::post('confirm-email/{token}', 'UserController@signupConfirmViaEmail')
@@ -254,9 +257,271 @@ Route::group([
                         Route::delete('/', 'UnitController@delete');
                     
                     });
+                    
+                    
+                    // programme routes
+                    Route::prefix('programmes')->group(function () {                    
+                        
+                        // create programme
+                        Route::post('/', 'ProgrammeController@create')
+                        ->middleware('validateProgramme');
+ 
+                        // view all programmes
+                        Route::get('/', 'ProgrammeController@viewAll'); 
                 
-                });
+                        // routes for single programme
+                        Route::group([
+                            'prefix' => '{programmeId}',
+                            'middleware' => 'programmeExist',
+                        ], function () {
+                            
+                            // view a programme
+                            Route::get('/', 'ProgrammeController@show');
+
+                            // routes for programme creator
+                            Route::middleware('programmeCreator')->group(function () {                        
+                                  
+                                // update programme
+                                Route::put('/', 'ProgrammeController@update')
+                                ->middleware('editProgramme');
+
+                                // cancel programme
+                                Route::delete('/', 'ProgrammeController@cancel');
+
+                                // suspend programme
+                                Route::post('/suspend', 'ProgrammeController@suspend');
+
+                                // change type programme
+                                Route::post('/type', 'ProgrammeController@changeType')
+                                ->middleware('programmeType');
+                        
+
+                                // routes for programme services
+                                Route::prefix('services')->group(function () {
+
+                                    Route::middleware('gappingService')->group(function () {
+                                
+                                        // create service
+                                        Route::post('/', 'ServiceController@create')
+                                        ->middleware('validateService');
+    
+                                        // update service
+                                        Route::put('/{serviceId}', 'ServiceController@update')
+                                        ->middleware(['serviceExist', 'validateUpdateService']);
+    
+                                        // view a single service
+                                        Route::delete('/{serviceId}', 'ServiceController@delete')
+                                        ->middleware('serviceExist');
+                                
+                                    });
+    
+                                    Route::middleware('fixServiceGap')->group(function () {
+                                    
+                                        // show service gaps
+                                        Route::get('/gaps', 'ServiceController@gaps');
+    
+                                        // show single service gaps
+                                        Route::get('/gaps/{gapId}', 'ServiceController@gap');
+    
+                                        // fix gaps
+                                        Route::post('/restore', 'ServiceController@restoreServices');
+    
+                                        // squash gaps
+                                        Route::post('/squash', 'ServiceController@squash');
+                                
+                                    });
+
+                                });
+                                
+                                // program handler routes
+                                Route::prefix('handlers')->group(function () {
+
+                                    // get programme handlers
+                                    Route::get('/', 'ProgrammeController@getHandlers');
+
+                                    // add programme handlers
+                                    Route::post('/', 'ProgrammeController@addHandlers')
+                                    ->middleware('addHandlers');
+
+                                    // remove programme handler
+                                    Route::delete('/{userId}', 'ProgrammeController@removeHandler')
+                                    ->middleware('programmeHandlerExist');
+
+                                });
+                                
+                                
+                                // routes for programme handlers
+                                Route::middleware('programmeHandlers')->group(function () {
+
+                                    // post programme invitee
+                                    Route::post('/invitee', 'ProgrammeController@addInvitee');
+
+                                    // get programme invitees
+                                    Route::post('/invitees', 'ProgrammeController@addInvitees')
+                                    ->middleware('validateAddInvitees');
+                        
+                                    // get programme invitees
+                                    Route::get('/invitees', 'AttendanceController@invitees');
+
+                                    // search programme invitees
+                                    Route::post('/search', 'AttendanceController@search')
+                                    ->middleware('validateSearch');
+
+                                    // get programme attendees
+                                    Route::get('/attendees', 'AttendanceController@attendees');
+
+                                    // post programme attendees
+                                    Route::post('/attendees', 'AttendanceController@addAttendees');
+
+                                    // post programme new contact
+                                    Route::post('/new', 'AttendanceController@newContact');
+
+                                    // get programme absentees
+                                    Route::get('/absentees', 'AttendanceController@absentees');
+                            
+                                    // get programme attendee signs
+                                    Route::get('/signs', 'AttendanceController@signs');
+
+                                    // all incomes 
+                                    Route::get('/', 'IncomeController@programmeIncomes'); 
+
+
+                                    // order of services
+                                    Route::group([
+                                        'prefix' => 'services',
+                                        'middleware' => 'gappingService',
+                                    ], function () {
+                            
+                                        // view all services
+                                        Route::get('/', 'ServiceController@viewAll');
+
+                                        // view a single service
+                                        Route::get('/{serviceId}', 'ServiceController@show')
+                                        ->middleware('serviceExist');                              
+
+                                    });
+
+
+                                    // routes for single invitee
+                                    Route::group([
+                                        'prefix' => 'invitees/{inviteeId}',
+                                        'middleware' => 'inviteeExist',
+                                    ], function () {
+                            
+                                        // remove programme invitee
+                                        Route::delete('/', 'AttendanceController@removeInvitee')
+                                        ->middleware('programmeCreator');
+
+                                        // add programme attendee and signs
+                                        Route::post('/signs', 'AttendanceController@addSign')
+                                        ->middleware('validateValue');                           
+                           
+                                        // show attendee sign
+                                        Route::get('/', 'AttendanceController@invitee');
+                            
+                                        // get programme attendee signs
+                                        Route::get('/signs', 'AttendanceController@attendeeSigns');
+                            
+                                        // routes for single attendee signing
+                                        Route::group([
+                                            'prefix' => 'signs/{signId}',
+                                            'middleware' => 'signExist',
+                                        ], function () {
+                                
+                                            // get single sign
+                                            Route::get('/', 'AttendanceController@getSign');
+
+                                            // update single sign
+                                            Route::put('/', 'AttendanceController@editSign');
+
+                                            // remove single sign
+                                            Route::delete('/', 'AttendanceController@removeSign');
+
+                                        });
+
+                                
+                                    });
+                            
+                            
+                                    // first timer routes
+                                    Route::prefix('first-timers')->group(function () {
+                            
+                                        // get programme first timers
+                                        Route::get('/', 'AttendanceController@getFirstTimers');
+                            
+                                       // create first timer 
+                                       Route::post('/', 'FirstTimerController@create')
+                                       ->middleware('validateFirstTimer'); 
+
+
+                                        // routes for single first timer
+                                        Route::group([
+                                            'prefix' => '{firstTimerId}',
+                                            'middleware' => 'firstTimerExist',
+                                        ], function () {
+                                
+                                            // get first timer
+                                            Route::get('/', 'FirstTimerController@show');
+                                
+                                            // update first timer
+                                            Route::put('/', 'FirstTimerController@update')
+                                            ->middleware('imageNotRequired'); 
+
+                                            // delete first timer
+                                            Route::delete('/', 'FirstTimerController@delete');
+                            
+                                        });
+                        
+                                    });
+
+
+                                    // income routes
+                                    Route::group([
+                                        'prefix' => 'income-types/{$incomeTypeId}/incomes',
+                                        'middleware' => 'incomeTypeExist'
+                                    ], function () {
+                            
+                                        // create income 
+                                        Route::post('/', 'IncomeController@create')
+                                        ->middleware('validateIncome'); 
+
+                                        // all incomes 
+                                        Route::get('/', 'IncomeController@programmeTypeIncomes') 
+                                        ->middleware('programmeCreator'); 
+
+
+                                        // routes for single income
+                                        Route::group([
+                                            'prefix' => '{incomeId}',
+                                            'middleware' => 'incomeExist',
+                                        ], function () {                            
+                            
+                                            // get income
+                                            Route::get('/', 'IncomeController@show')
+                                            ->middleware('incomeCreatorDiamondGold'); 
+
+                                            // update income
+                                            Route::put('/', 'IncomeController@update')
+                                            ->middleware('incomeCreator'); 
+
+                                            // delete income
+                                            Route::delete('/', 'IncomeController@delete')
+                                            ->middleware('incomeCreator'); 
+                            
+                                        });
+                                    
+                                    }); 
+                                       
+                                });
+
+                            });
+
+                        });
+
+                    });
             
+                });
+
             });
 
 
@@ -341,8 +606,271 @@ Route::group([
                         ->middleware(['validateUpgrade', 'upgradeAggregate', 'noSubs']);
                     
                     });
+
+
+                    // programme routes
+                    Route::prefix('programmes')->group(function () {                    
+                        
+                        // create programme
+                        Route::post('/', 'ProgrammeController@create')
+                        ->middleware('validateProgramme');
+ 
+                        // view all programmes
+                        Route::get('/', 'ProgrammeController@viewAll'); 
                 
-                 });
+                        // routes for single programme
+                        Route::group([
+                            'prefix' => '{programmeId}',
+                            'middleware' => 'programmeExist',
+                        ], function () {
+                            
+                            // view a programme
+                            Route::get('/', 'ProgrammeController@show');
+
+                            // routes for programme creator
+                            Route::middleware('programmeCreator')->group(function () {                        
+                                  
+                                // update programme
+                                Route::put('/', 'ProgrammeController@update')
+                                ->middleware('editProgramme');
+
+                                // cancel programme
+                                Route::delete('/', 'ProgrammeController@cancel');
+
+                                // suspend programme
+                                Route::post('/suspend', 'ProgrammeController@suspend');
+
+                                // change type programme
+                                Route::post('/type', 'ProgrammeController@changeType')
+                                ->middleware('programmeType');
+                        
+
+                                // routes for programme services
+                                Route::prefix('services')->group(function () {
+
+                                    Route::middleware('gappingService')->group(function () {
+                                
+                                        // create service
+                                        Route::post('/', 'ServiceController@create')
+                                        ->middleware('validateService');
+    
+                                        // update service
+                                        Route::put('/{serviceId}', 'ServiceController@update')
+                                        ->middleware(['serviceExist', 'validateUpdateService']);
+    
+                                        // view a single service
+                                        Route::delete('/{serviceId}', 'ServiceController@delete')
+                                        ->middleware('serviceExist');
+                                
+                                    });
+    
+                                    Route::middleware('fixServiceGap')->group(function () {
+                                    
+                                        // show service gaps
+                                        Route::get('/gaps', 'ServiceController@gaps');
+    
+                                        // show single service gaps
+                                        Route::get('/gaps/{gapId}', 'ServiceController@gap');
+    
+                                        // fix gaps
+                                        Route::post('/restore', 'ServiceController@restoreServices');
+    
+                                        // squash gaps
+                                        Route::post('/squash', 'ServiceController@squash');
+                                
+                                    });
+
+                                });
+                                
+                                // program handler routes
+                                Route::prefix('handlers')->group(function () {
+
+                                    // get programme handlers
+                                    Route::get('/', 'ProgrammeController@getHandlers');
+
+                                    // add programme handlers
+                                    Route::post('/', 'ProgrammeController@addHandlers')
+                                    ->middleware('addHandlers');
+
+                                    // remove programme handler
+                                    Route::delete('/{userId}', 'ProgrammeController@removeHandler')
+                                    ->middleware('programmeHandlerExist');
+
+                                });
+                                
+                                
+                                // routes for programme handlers
+                                Route::middleware('programmeHandlers')->group(function () {
+
+                                    // post programme invitee
+                                    Route::post('/invitee', 'ProgrammeController@addInvitee');
+
+                                    // get programme invitees
+                                    Route::post('/invitees', 'ProgrammeController@addInvitees')
+                                    ->middleware('validateAddInvitees');
+                        
+                                    // get programme invitees
+                                    Route::get('/invitees', 'AttendanceController@invitees');
+
+                                    // search programme invitees
+                                    Route::post('/search', 'AttendanceController@search')
+                                    ->middleware('validateSearch');
+
+                                    // get programme attendees
+                                    Route::get('/attendees', 'AttendanceController@attendees');
+
+                                    // post programme attendees
+                                    Route::post('/attendees', 'AttendanceController@addAttendees');
+
+                                    // post programme new contact
+                                    Route::post('/new', 'AttendanceController@newContact');
+
+                                    // get programme absentees
+                                    Route::get('/absentees', 'AttendanceController@absentees');
+                            
+                                    // get programme attendee signs
+                                    Route::get('/signs', 'AttendanceController@signs');
+
+                                    // all incomes 
+                                    Route::get('/', 'IncomeController@programmeIncomes'); 
+
+
+                                    // order of services
+                                    Route::group([
+                                        'prefix' => 'services',
+                                        'middleware' => 'gappingService',
+                                    ], function () {
+                            
+                                        // view all services
+                                        Route::get('/', 'ServiceController@viewAll');
+
+                                        // view a single service
+                                        Route::get('/{serviceId}', 'ServiceController@show')
+                                        ->middleware('serviceExist');                              
+
+                                    });
+
+
+                                    // routes for single invitee
+                                    Route::group([
+                                        'prefix' => 'invitees/{inviteeId}',
+                                        'middleware' => 'inviteeExist',
+                                    ], function () {
+                            
+                                        // remove programme invitee
+                                        Route::delete('/', 'AttendanceController@removeInvitee')
+                                        ->middleware('programmeCreator');
+
+                                        // add programme attendee and signs
+                                        Route::post('/signs', 'AttendanceController@addSign')
+                                        ->middleware('validateValue');                           
+                           
+                                        // show attendee sign
+                                        Route::get('/', 'AttendanceController@invitee');
+                            
+                                        // get programme attendee signs
+                                        Route::get('/signs', 'AttendanceController@attendeeSigns');
+                            
+                                        // routes for single attendee signing
+                                        Route::group([
+                                            'prefix' => 'signs/{signId}',
+                                            'middleware' => 'signExist',
+                                        ], function () {
+                                
+                                            // get single sign
+                                            Route::get('/', 'AttendanceController@getSign');
+
+                                            // update single sign
+                                            Route::put('/', 'AttendanceController@editSign');
+
+                                            // remove single sign
+                                            Route::delete('/', 'AttendanceController@removeSign');
+
+                                        });
+
+                                
+                                    });
+                            
+                            
+                                    // first timer routes
+                                    Route::prefix('first-timers')->group(function () {
+                            
+                                        // get programme first timers
+                                        Route::get('/', 'AttendanceController@getFirstTimers');
+                            
+                                       // create first timer 
+                                       Route::post('/', 'FirstTimerController@create')
+                                       ->middleware('validateFirstTimer'); 
+
+
+                                        // routes for single first timer
+                                        Route::group([
+                                            'prefix' => '{firstTimerId}',
+                                            'middleware' => 'firstTimerExist',
+                                        ], function () {
+                                
+                                            // get first timer
+                                            Route::get('/', 'FirstTimerController@show');
+                                
+                                            // update first timer
+                                            Route::put('/', 'FirstTimerController@update')
+                                            ->middleware('imageNotRequired'); 
+
+                                            // delete first timer
+                                            Route::delete('/', 'FirstTimerController@delete');
+                            
+                                        });
+                        
+                                    });
+
+
+                                    // income routes
+                                    Route::group([
+                                        'prefix' => 'income-types/{$incomeTypeId}/incomes',
+                                        'middleware' => 'incomeTypeExist'
+                                    ], function () {
+                            
+                                        // create income 
+                                        Route::post('/', 'IncomeController@create')
+                                        ->middleware('validateIncome'); 
+
+                                        // all incomes 
+                                        Route::get('/', 'IncomeController@programmeTypeIncomes') 
+                                        ->middleware('programmeCreator'); 
+
+
+                                        // routes for single income
+                                        Route::group([
+                                            'prefix' => '{incomeId}',
+                                            'middleware' => 'incomeExist',
+                                        ], function () {                            
+                            
+                                            // get income
+                                            Route::get('/', 'IncomeController@show')
+                                            ->middleware('incomeCreatorDiamondGold'); 
+
+                                            // update income
+                                            Route::put('/', 'IncomeController@update')
+                                            ->middleware('incomeCreator'); 
+
+                                            // delete income
+                                            Route::delete('/', 'IncomeController@delete')
+                                            ->middleware('incomeCreator'); 
+                            
+                                        });
+                                    
+                                    }); 
+                                       
+                                });
+
+                            });
+
+                        });
+
+                    });
+
+                
+                });
             
             });
 
@@ -377,7 +905,7 @@ Route::group([
                     Route::middleware('diamondOrGold')->group(function () {
                     
                         // all type incomes 
-                        Route::get('/income', 'IncomeTypeController@typeIncomes'); 
+                        Route::get('/income', 'IncomeController@typeIncomes'); 
         
                         // update income type
                         Route::put('/', 'IncomeTypeController@update')
@@ -612,6 +1140,9 @@ Route::group([
                         // get programme attendee signs
                         Route::get('/signs', 'AttendanceController@signs');
 
+                        // all incomes 
+                        Route::get('/', 'IncomeController@programmeIncomes'); 
+
 
                         // order of services
                         Route::group([
@@ -699,9 +1230,46 @@ Route::group([
                             });
                         
                         });
+
+
+                        // income routes
+                        Route::group([
+                            'prefix' => 'income-types/{$incomeTypeId}/incomes',
+                            'middleware' => 'incomeTypeExist'], function () {
+                            
+                            // create income 
+                            Route::post('/', 'IncomeController@create')
+                            ->middleware('validateIncome'); 
+
+                            // all incomes 
+                            Route::get('/', 'IncomeController@programmeTypeIncomes') 
+                            ->middleware('programmeCreator'); 
+
+
+                            // routes for single income
+                            Route::group([
+                                'prefix' => '{incomeId}',
+                                'middleware' => 'incomeExist',
+                            ], function () {                            
+                            
+                                // get income
+                                Route::get('/', 'IncomeController@show')
+                                ->middleware('incomeCreatorDiamondGold'); 
+
+                                // update income
+                                Route::put('/', 'IncomeController@update')
+                                ->middleware('incomeCreator'); 
+
+                                // delete income
+                                Route::delete('/', 'IncomeController@delete')
+                                ->middleware('incomeCreator'); 
+                            
+                            });
+                        
+                        });
+                        
                     
                     });
-
 
 
                 });
